@@ -23,7 +23,7 @@ def main():
     parser.add_argument(
         "-c",
         dest="ckpt_dir",
-        default=str(REPO_ROOT / "method_checkpoints/refine"),
+        default=str(REPO_ROOT / "method_checkpoints/cair"),
         help="checkpoint directory",
     )
     parser.add_argument(
@@ -39,8 +39,8 @@ def main():
     parser.add_argument(
         "-m",
         dest="method",
-        default="refine",
-        choices=["refine", "linear", "pchip", "akima"],
+        default="cair",
+        choices=["cair", "linear", "pchip", "akima"],
         help="short-gap imputer",
     )
     parser.add_argument(
@@ -63,7 +63,7 @@ def main():
         "-x", dest="pypots_python", default=None, help="PyPOTS environment interpreter"
     )
     args = parser.parse_args()
-    if args.method != "refine" and args.p != "shortgap":
+    if args.method != "cair" and args.p != "shortgap":
         parser.error("-m applies to the shortgap protocol")
     if args.p == "physiological" and args.dataset != "aireadi":
         parser.error("physiological masks are defined for AI-READI CGM")
@@ -71,14 +71,14 @@ def main():
         args.out = str(
             REPO_ROOT
             / (
-                f"method_checkpoints/refine/member_seed{args.seed}.pt"
+                f"method_checkpoints/cair/member_seed{args.seed}.pt"
                 if args.p == "train"
                 else f"results/{args.dataset}_{args.p}_{args.method}.json"
             )
         )
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     if args.p == "train":
-        from methods.refine.train_refine import train
+        from methods.cair.train_cair import train
 
         args.datasets = args.dataset
         args.stage = "finetune"
@@ -97,9 +97,9 @@ def main():
         args.mask_mode = "realistic"
         train(args)
     elif args.p == "mechanisms":
-        args.refine_ckpt_glob = str(Path(args.ckpt_dir) / "*.pt")
-        args.n_refine_members = 5
-        args.skip_refine = False
+        args.cair_ckpt_glob = str(Path(args.ckpt_dir) / "*.pt")
+        args.n_cair_members = 5
+        args.skip_cair = False
         args.skip_baselines = False
         args.pypots_epochs = 100
         args.mm_pkl = str(DATA_ROOT / "aireadi_cgm_mm/aireadi_cgm_test.pkl")
@@ -125,7 +125,7 @@ def main():
             args.n_placements = 10
             args.impute_max_len = 0
         else:
-            from experiments.evaluation.eval_refine import main as evaluate
+            from experiments.evaluation.eval_cair import main as evaluate
 
             args.n_masks = 5
         evaluate(args)

@@ -11,16 +11,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from methods.refine.config import (
+from methods.cair.config import (
     BEST_ENSEMBLE_MEMBERS,
     BEST_INFERENCE_CONFIG,
     BEST_MEMBER_KWARGS,
 )
-from methods.refine._cgm_mae_core import CGMMAEV66, CGM_STD
+from methods.cair.backbone import CAIRBackbone, CGM_STD
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ROOT = os.path.abspath(os.path.join(_HERE, "..", ".."))
-DEFAULT_CKPT_DIR = os.path.join(_ROOT, "method_checkpoints", "refine")
+DEFAULT_CKPT_DIR = os.path.join(_ROOT, "method_checkpoints", "cair")
 DEFAULT_STRIDE = int(BEST_INFERENCE_CONFIG["stride"])
 DEFAULT_N_REFINEMENTS = int(BEST_INFERENCE_CONFIG["n_refinements"])
 
@@ -86,7 +86,7 @@ class _Interp(nn.Module):
         return self.head(self.net(self.inp(f)))  # attn
 
 
-class Refine(CGMMAEV66):
+class CAIR(CAIRBackbone):
     """Fully-neural interpolate-and-refine model (single member of the ensemble)."""
 
     def __init__(
@@ -150,10 +150,10 @@ class Refine(CGMMAEV66):
         return out
 
 
-def _load_member(ckpt_path: str, device: str) -> Refine:
+def _load_member(ckpt_path: str, device: str) -> CAIR:
     ck = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     c = ck.get("config", {})
-    m = Refine(
+    m = CAIR(
         interp_hidden=c.get("hidden", 128),
         interp_layers=c.get("layers", 4),
         inject=c.get("inject", "residual"),
@@ -174,15 +174,15 @@ def _load_member(ckpt_path: str, device: str) -> Refine:
     missing = [k for k in info.missing_keys if not k.startswith("dom_emb")]
     if missing or info.unexpected_keys:
         raise RuntimeError(
-            f"Refine load mismatch for {ckpt_path}: "
+            f"CAIR load mismatch for {ckpt_path}: "
             f"missing={missing} unexpected={list(info.unexpected_keys)}"
         )
     m.eval().to(torch.device(device))
     return m
 
 
-class RefineImputer:
-    """Fully-neural REFINE imputer (deep ensemble of seed members).
+class CAIRImputer:
+    """Fully-neural CAIR imputer (deep ensemble of seed members).
 
     The prediction is the average of the member ``impute`` outputs. No classical
     interpolation and no length-gate: the result is fully neural.
@@ -201,15 +201,15 @@ class RefineImputer:
         if not ckpt_paths:
             expected = ", ".join(BEST_ENSEMBLE_MEMBERS)
             raise FileNotFoundError(
-                "no REFINE checkpoints found. "
+                "no CAIR checkpoints found. "
                 f"Expected ensemble members like [{expected}] under {ckpt_dir}, "
                 "or pass ckpt_paths/ckpt_dir explicitly."
             )
         self.device = device
         self.stride = stride
         self.n_refinements = n_refinements
-        self.models: List[Refine] = [_load_member(p, device) for p in ckpt_paths]
-        print(f"REFINE loaded ({len(self.models)}-member ensemble, device {device})")
+        self.models: List[CAIR] = [_load_member(p, device) for p in ckpt_paths]
+        print(f"CAIR loaded ({len(self.models)}-member ensemble, device {device})")
 
     def impute(
         self, full_ts: np.ndarray, obs_mask: np.ndarray, modality=None, ctx_vec=None

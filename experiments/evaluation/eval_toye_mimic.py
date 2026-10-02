@@ -102,13 +102,13 @@ def run(args):
         high_thr=float(burden["high_thr"]),
     )
 
-    refine = None
-    if not args.skip_refine:
-        from methods.refine import RefineImputer
+    cair = None
+    if not args.skip_cair:
+        from methods.cair import CAIRImputer
 
-        rpaths = sorted(_glob.glob(args.refine_ckpt_glob))[: args.n_refine_members]
-        assert rpaths, f"no REFINE checkpoints matched {args.refine_ckpt_glob}"
-        refine = RefineImputer(ckpt_paths=rpaths, device=device)
+        rpaths = sorted(_glob.glob(args.cair_ckpt_glob))[: args.n_cair_members]
+        assert rpaths, f"no CAIR checkpoints matched {args.cair_ckpt_glob}"
+        cair = CAIRImputer(ckpt_paths=rpaths, device=device)
 
     cells = []
     pypots_jobs = []
@@ -188,14 +188,14 @@ def run(args):
                         )
                         cell.update({"careunit": careunit, "mortality": mortality})
                         cells.append(cell)
-                if refine is not None:
+                if cair is not None:
                     fe = full_orig.copy()
                     fe[t_lo:t_hi] = obs
                     fm = full_ts.copy()
                     fm[~fe] = 0.0
-                    rpred = refine.impute(fm, fe.astype(np.float32))[t_lo:t_hi]
+                    rpred = cair.impute(fm, fe.astype(np.float32))[t_lo:t_hi]
                     cell = _score(
-                        "refine",
+                        "cair",
                         mech,
                         pct,
                         rpred,
@@ -283,20 +283,20 @@ def main():
     ap.add_argument("--data_dir", default=None)
     ap.add_argument("--gpu", type=int, default=0)
     ap.add_argument("--n_participants", type=int, default=400)
-    ap.add_argument("--skip_refine", action="store_true")
+    ap.add_argument("--skip_cair", action="store_true")
     ap.add_argument(
         "--skip_baselines",
         action="store_true",
-        help="Skip in-proc baselines (REFINE-only run; merge with a "
-        "prior --skip_refine baseline JSON that used identical seeds).",
+        help="Skip in-proc baselines (CAIR-only run; merge with a "
+        "prior --skip_cair baseline JSON that used identical seeds).",
     )
     ap.add_argument(
-        "--refine_ckpt_glob",
+        "--cair_ckpt_glob",
         default=os.path.join(
-            ROOT, "method_checkpoints", "refine_mimic_abp", "uni_seed*.pt"
+            ROOT, "method_checkpoints", "cair_mimic_abp", "uni_seed*.pt"
         ),
     )
-    ap.add_argument("--n_refine_members", type=int, default=5)
+    ap.add_argument("--n_cair_members", type=int, default=5)
     ap.add_argument(
         "--pypots_python",
         default=None,

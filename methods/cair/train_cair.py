@@ -8,8 +8,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from methods.refine._cgm_mae_core import (
-    CGMV66Dataset,
+from methods.cair.backbone import (
+    CAIRDataset,
     make_train_loader,
     warm_start_from,
     CGM_STD,
@@ -17,7 +17,7 @@ from methods.refine._cgm_mae_core import (
     PASS2_WEIGHT,
     PASS3_WEIGHT,
 )
-from methods.refine.refine import Refine
+from methods.cair.cair import CAIR
 from cgm_datasets.pooled import load_pooled_records
 
 
@@ -62,7 +62,7 @@ def build_model(
     n_extra_cond=0,
     ctx_dim=0,
 ):
-    model = Refine(
+    model = CAIR(
         interp_hidden=interp_hidden,
         interp_layers=interp_layers,
         inject=inject,
@@ -83,7 +83,7 @@ def build_model(
     return model
 
 
-def refine_loss(
+def cair_loss(
     model, obs, msk, pos, tod, cond, gt, tgt, dom, *, aux, aux_huber, ctx=None
 ):
     """3-pass refinement MSE + auxiliary supervised interpolation loss."""
@@ -162,14 +162,14 @@ def train(args):
     K = ts_width(ts_mods)
     S = ctx_width(static_blocks)
     print(
-        f"[train_refine] stage={args.stage} datasets={dom_names} "
+        f"[train_cair] stage={args.stage} datasets={dom_names} "
         f"train={len(train_r)} val={len(val_r)} device={device} "
         f"ts_mods={ts_mods} static_blocks={static_blocks} K={K} S={S}",
         flush=True,
     )
 
     train_stride = getattr(args, "stride", 144)
-    ds_train = CGMV66Dataset(
+    ds_train = CAIRDataset(
         train_r,
         window=args.window,
         stride=train_stride,
@@ -178,7 +178,7 @@ def train(args):
         static_blocks=static_blocks,
         mask_mode=args.mask_mode,
     )
-    ds_val = CGMV66Dataset(
+    ds_val = CAIRDataset(
         val_r,
         window=args.window,
         stride=args.window,
@@ -267,7 +267,7 @@ def train(args):
                 dom.to(device),
             )
             ctx = ctx.to(device)
-            loss = refine_loss(
+            loss = cair_loss(
                 model,
                 obs,
                 msk,
@@ -317,7 +317,7 @@ def train(args):
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     torch.save({"model": state, "config": cfg, "sel_epoch": best["epoch"]}, args.out)
     print(
-        f"[train_refine] saved {args.out} best_val_pass3={best['rmse']:.2f} "
+        f"[train_cair] saved {args.out} best_val_pass3={best['rmse']:.2f} "
         f"sel_epoch={best['epoch']} ({time.time()-t0:.0f}s)",
         flush=True,
     )

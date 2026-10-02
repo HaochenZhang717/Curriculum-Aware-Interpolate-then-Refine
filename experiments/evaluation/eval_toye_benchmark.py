@@ -144,14 +144,14 @@ def run(args):
     mean_mgdl = float(meta.glucose_mean_mgdl)
     t_lo, t_hi = meta.eval_window
 
-    from methods.refine import RefineImputer
+    from methods.cair import CAIRImputer
     import glob as _glob
 
-    rpaths = sorted(_glob.glob(os.path.join(ROOT, args.refine_ckpt_glob)))[
-        : args.n_refine_members
+    rpaths = sorted(_glob.glob(os.path.join(ROOT, args.cair_ckpt_glob)))[
+        : args.n_cair_members
     ]
-    assert rpaths, f"no REFINE checkpoints matched {args.refine_ckpt_glob}"
-    refine = RefineImputer(ckpt_paths=rpaths, device=device)
+    assert rpaths, f"no CAIR checkpoints matched {args.cair_ckpt_glob}"
+    cair = CAIRImputer(ckpt_paths=rpaths, device=device)
     battery = load_battery()
     mm_activity = load_mm_activity(args.mm_pkl)
     group_map = load_group_map()
@@ -227,15 +227,15 @@ def run(args):
                         pid=pid,
                     )
                     cells.append(cell)
-                # REFINE (operates on the full series)
+                # CAIR (operates on the full series)
                 fe = full_orig.copy()
                 fe[t_lo:t_hi] = obs
                 fm = full_ts.copy()
                 fm[~fe] = 0.0
-                rpred = refine.impute(fm, fe.astype(np.float32))[t_lo:t_hi]
+                rpred = cair.impute(fm, fe.astype(np.float32))[t_lo:t_hi]
                 cells.append(
                     _score(
-                        "refine",
+                        "cair",
                         mech,
                         pct,
                         rpred,
@@ -272,7 +272,7 @@ def run(args):
             "dataset": meta.name,
             "n_participants": len(test),
             "mar_skipped_persons": mar_skipped,
-            "n_refine_members": len(rpaths),
+            "n_cair_members": len(rpaths),
             "cells": [
                 {
                     k: c[k]
@@ -389,11 +389,11 @@ def main():
     ap.add_argument("--gpu", type=int, default=0)
     ap.add_argument("--n_participants", type=int, default=50)
     ap.add_argument(
-        "--refine_ckpt_glob",
-        default=os.path.join(ROOT, "method_checkpoints", "refine", "member*.pt"),
+        "--cair_ckpt_glob",
+        default=os.path.join(ROOT, "method_checkpoints", "cair", "member*.pt"),
         help="Checkpoint glob for the CAIR ensemble.",
     )
-    ap.add_argument("--n_refine_members", type=int, default=5)
+    ap.add_argument("--n_cair_members", type=int, default=5)
     ap.add_argument("--mm_pkl", default=DEFAULT_MM)
     ap.add_argument(
         "--pypots_python",

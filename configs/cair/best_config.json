@@ -1,5 +1,5 @@
 {
-  "method_name": "REFINE",
+  "method_name": "CAIR",
   "variant": "best_ensemble",
   "summary": "Fully-neural interpolate-and-refine masked autoencoder for CGM imputation.",
   "model": {
@@ -20,7 +20,11 @@
     "learning_rate": 0.0003,
     "warm_start": false,
     "ema": true,
-    "loss_weights": [0.15, 0.35, 0.5],
+    "loss_weights": [
+      0.15,
+      0.35,
+      0.5
+    ],
     "member_epochs": {
       "member0_hpo3_a07_l4.pt": 120,
       "member1_hpo4_seed1.pt": 100,
@@ -34,7 +38,7 @@
     "n_refinements": 2
   },
   "ensemble": {
-    "checkpoint_dir": "method_checkpoints/refine",
+    "checkpoint_dir": "method_checkpoints/cair",
     "members": [
       "member0_hpo3_a07_l4.pt",
       "member1_hpo4_seed1.pt",
@@ -42,12 +46,17 @@
       "member3_hpo4_seed3.pt",
       "member4_hpo4_seed4.pt"
     ],
-    "seeds": [0, 1, 2, 3, 4]
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
   },
   "evaluation": {
     "dataset": "aireadi",
-    "protocol": "50 test participants x 5 masks x 5 strategies, day-2 [288:576]",
-    "expected_avg_rmse_mgdl": 13.75,
-    "expected_single_model_rmse_mgdl": 14.05
+    "protocol": "352 test participants (full test set) x 5 masks x 5 strategies, day-2 [288:576]",
+    "expected_avg_rmse_mgdl": 14.61
   }
 }

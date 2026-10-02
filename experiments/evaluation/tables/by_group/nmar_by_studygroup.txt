@@ -1,4 +1,4 @@
-group        n_pid  refine  linear  missF   | refine_mrrTIR linear_mrrTIR
+group        n_pid  cair  linear  missF   | cair_mrrTIR linear_mrrTIR
 healthy        16    18.29  21.49  27.16  |   0.165       0.097
 pre-diabetes   13    15.90  21.15  29.00  |   0.467       0.382
 oral-med        7    33.96  40.19  57.90  |   0.601       0.556

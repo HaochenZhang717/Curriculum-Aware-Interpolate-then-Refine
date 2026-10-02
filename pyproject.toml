@@ -34,12 +34,15 @@ Paper = "https://arxiv.org/abs/2608.21207"
 
 [project.scripts]
 cgm-datasets = "cgm_datasets.prepare:main"
-refine-eval = "experiments.evaluation.eval_refine:main"
-refine-eval-shortgap = "experiments.evaluation.eval_short_gaps:main"
+cair-eval = "experiments.evaluation.eval_cair:main"
+cair-eval-shortgap = "experiments.evaluation.eval_short_gaps:main"
 
 [tool.pytest.ini_options]
 pythonpath = [".", "baselines/statistical"]
 testpaths = ["tests"]
+
+[tool.black]
+target-version = ["py310"]
 
 [tool.setuptools]
 include-package-data = false

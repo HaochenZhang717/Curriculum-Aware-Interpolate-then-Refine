@@ -279,8 +279,8 @@ def _fill_methods_native(
     mean,
     std,
     methods,
-    refine=None,
-    refine_mm=None,
+    cair=None,
+    cair_mm=None,
     mod=None,
     ctx=None,
 ):
@@ -321,13 +321,13 @@ def _fill_methods_native(
             zpred = np.asarray(zpred, dtype=np.float32).reshape(-1) * std + mean
             filled = full_native.copy()
             filled[tgt] = zpred[tgt]
-        elif m in ("refine", "refine_mm"):
-            imp = refine if m == "refine" else refine_mm
+        elif m in ("cair", "cair_mm"):
+            imp = cair if m == "cair" else cair_mm
             if imp is None:
                 continue
             fm = z.copy()
             fm[~seen] = 0.0
-            if m == "refine_mm":
+            if m == "cair_mm":
                 zpred = imp.impute(
                     fm, seen.astype(np.float32), modality=mod, ctx_vec=ctx
                 )
@@ -354,8 +354,8 @@ def evaluate(
     thr_lo,
     thr_hi,
     methods,
-    refine=None,
-    refine_mm=None,
+    cair=None,
+    cair_mm=None,
     ts_mods=None,
     mechs=MECHS,
     rates=RATES,
@@ -369,7 +369,7 @@ def evaluate(
     from sklearn.metrics import roc_auc_score
 
     ts_mods = ts_mods or ["hr", "resp", "spo2"]
-    need_mm = "refine_mm" in methods and refine_mm is not None
+    need_mm = "cair_mm" in methods and cair_mm is not None
     if need_mm:
         from cgm_datasets.multimodal.modality_spec import build_mod_and_ctx
 
@@ -419,8 +419,8 @@ def evaluate(
                     mean,
                     std,
                     methods,
-                    refine=refine,
-                    refine_mm=refine_mm,
+                    cair=cair,
+                    cair_mm=cair_mm,
                     mod=mod,
                     ctx=ctx,
                 )
@@ -456,7 +456,7 @@ def evaluate(
 
 
 def _print_table(results, mech="nmar", rate=0.3):
-    order = ["real", "refine_mm", "refine", "linear", "knn", "mean"]
+    order = ["real", "cair_mm", "cair", "linear", "knn", "mean"]
     print(f"\n=== AUROC at {mech} rate {rate} ===")
     header = "label      " + "".join(f"{m:>11}" for m in order)
     print(header)
@@ -538,35 +538,33 @@ def run(args):
     if not models:
         print("[warn] no usable labels; aborting", flush=True)
 
-    # REFINE ensembles (GPU). Guard: skip a method if its checkpoints are absent.
-    # Ensembles live under method_checkpoints/refine_<dataset>/ as uni_seed*.pt
-    # (unimodal -> "refine") and mm_seed*.pt (multimodal -> "refine_mm").
-    refine = None
-    refine_mm = None
+    # CAIR ensembles (GPU). Guard: skip a method if its checkpoints are absent.
+    # Ensembles live under method_checkpoints/cair_<dataset>/ as uni_seed*.pt
+    # (unimodal -> "cair") and mm_seed*.pt (multimodal -> "cair_mm").
+    cair = None
+    cair_mm = None
     ts_mods = ["hr", "resp", "spo2"]
     device = args.device
     ckpt_dir = os.path.join(
         ROOT,
         "method_checkpoints",
-        f"refine_{args.dataset}{getattr(args, 'ckpt_suffix', '')}",
+        f"cair_{args.dataset}{getattr(args, 'ckpt_suffix', '')}",
     )
-    if "refine" in methods:
+    if "cair" in methods:
         rpaths = sorted(_glob.glob(os.path.join(ckpt_dir, "uni_seed*.pt")))
         if rpaths:
-            from methods.refine import RefineImputer
+            from methods.cair import CAIRImputer
 
-            refine = RefineImputer(ckpt_paths=rpaths, device=device)
+            cair = CAIRImputer(ckpt_paths=rpaths, device=device)
         else:
-            print(
-                f"[skip] method 'refine': no uni_seed*.pt under {ckpt_dir}", flush=True
-            )
-            methods = [m for m in methods if m != "refine"]
-    if "refine_mm" in methods:
+            print(f"[skip] method 'cair': no uni_seed*.pt under {ckpt_dir}", flush=True)
+            methods = [m for m in methods if m != "cair"]
+    if "cair_mm" in methods:
         mpaths = sorted(_glob.glob(os.path.join(ckpt_dir, "mm_seed*.pt")))
         if mpaths:
-            from methods.refine import RefineImputer
+            from methods.cair import CAIRImputer
 
-            refine_mm = RefineImputer(ckpt_paths=mpaths, device=device)
+            cair_mm = CAIRImputer(ckpt_paths=mpaths, device=device)
             # read ts_mods off the first checkpoint config when available
             try:
                 import torch
@@ -577,10 +575,10 @@ def run(args):
                 pass
         else:
             print(
-                f"[skip] method 'refine_mm': no mm_seed*.pt under {ckpt_dir}",
+                f"[skip] method 'cair_mm': no mm_seed*.pt under {ckpt_dir}",
                 flush=True,
             )
-            methods = [m for m in methods if m != "refine_mm"]
+            methods = [m for m in methods if m != "cair_mm"]
 
     print(
         f"[eval] methods={methods} mechs={list(MECHS)} rates={list(RATES)}", flush=True
@@ -594,8 +592,8 @@ def run(args):
         thr_lo,
         thr_hi,
         methods,
-        refine=refine,
-        refine_mm=refine_mm,
+        cair=cair,
+        cair_mm=cair_mm,
         ts_mods=ts_mods,
         context_slots=context_slots,
     )
@@ -625,7 +623,7 @@ def main():
     ap.add_argument("--device", default="cuda:0")
     ap.add_argument("--n_test", type=int, default=400)
     ap.add_argument("--n_seeds", type=int, default=5)
-    ap.add_argument("--methods", default="real,mean,linear,knn,refine,refine_mm")
+    ap.add_argument("--methods", default="real,mean,linear,knn,cair,cair_mm")
     ap.add_argument(
         "--context_vitals",
         default="auto",
@@ -634,7 +632,7 @@ def main():
     ap.add_argument(
         "--ckpt_suffix",
         default="",
-        help="REFINE checkpoint dir suffix, e.g. '_realistic' for mask-aligned",
+        help="CAIR checkpoint dir suffix, e.g. '_realistic' for mask-aligned",
     )
     ap.add_argument("--out", default=None)
     run(ap.parse_args())

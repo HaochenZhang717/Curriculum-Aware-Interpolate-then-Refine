@@ -311,7 +311,7 @@ def main():
         fontsize=12.5,
     )
     leg.set_title(
-        "conditioning modality (cumulative, REFINE ladder)",
+        "conditioning modality (cumulative, CAIR ladder)",
         prop={"size": 13.0, "weight": "bold"},
     )
 
@@ -363,7 +363,7 @@ def main():
 
     # Markdown (best rung per row in bold)
     with open(md_path, "w") as f:
-        f.write("# In-gap RMSE (mg/dL) per panel per REFINE ladder rung\n\n")
+        f.write("# In-gap RMSE (mg/dL) per panel per CAIR ladder rung\n\n")
         f.write(
             "Each value is the RMSE between the imputed and held-out ground "
             "truth inside the zoomed (longest-contiguous) gap of the panel. "
@@ -433,7 +433,7 @@ def main():
     )
     caption = (
         "Figure | Effect of progressive multimodal conditioning on CGM gap "
-        "imputation across the REFINE modality ladder. A 5 x 5 grid of carved "
+        "imputation across the CAIR modality ladder. A 5 x 5 grid of carved "
         "gaps is shown: each row is one physiological masking strategy "
         "(row 1 overnight/sleep; row 2 ascending/rise; row 3 post-meal; "
         "row 4 dipping/fall; row 5 mixed/combined) and each column is a distinct "

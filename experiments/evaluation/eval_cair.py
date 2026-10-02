@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the REFINE headline on AI-READI from the clean methods/ package."""
+"""Reproduce the CAIR headline on AI-READI from the clean methods/ package."""
 
 from __future__ import annotations
 import argparse, json, os, sys, time
@@ -11,7 +11,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from utils.physiological_masking import create_physiological_mask
-from methods.refine import RefineImputer
+from methods.cair import CAIRImputer
 from cgm_datasets import load_dataset_splits
 
 CGM_STD = 42.33
@@ -33,7 +33,7 @@ def main(args=None):
     ap.add_argument("--n_participants", type=int, default=50)
     ap.add_argument("--n_masks", type=int, default=5)
     ap.add_argument(
-        "--ckpt_dir", default=os.path.join(ROOT, "method_checkpoints", "refine")
+        "--ckpt_dir", default=os.path.join(ROOT, "method_checkpoints", "cair")
     )
     ap.add_argument(
         "--ckpt",
@@ -56,9 +56,9 @@ def main(args=None):
         "--n_refinements",
         type=int,
         default=2,
-        help="REFINE inference refinement passes (ablation knob; publish default=2).",
+        help="CAIR inference refinement passes (ablation knob; publish default=2).",
     )
-    ap.add_argument("--out", default=os.path.join(HERE, "refine_eval.json"))
+    ap.add_argument("--out", default=os.path.join(HERE, "cair_eval.json"))
     if args is None:
         args = ap.parse_args()
     import torch
@@ -74,15 +74,15 @@ def main(args=None):
     nref = int(args.n_refinements)
     if args.ckpt_paths:
         paths = [p for p in args.ckpt_paths.split(",") if p]
-        imp = RefineImputer(ckpt_paths=paths, device=device, n_refinements=nref)
+        imp = CAIRImputer(ckpt_paths=paths, device=device, n_refinements=nref)
         spec_ckpt = paths[0]
     elif args.ckpt is not None:
-        imp = RefineImputer(ckpt_paths=[args.ckpt], device=device, n_refinements=nref)
+        imp = CAIRImputer(ckpt_paths=[args.ckpt], device=device, n_refinements=nref)
         spec_ckpt = args.ckpt
     else:
         import glob as _glob
 
-        imp = RefineImputer(ckpt_dir=args.ckpt_dir, device=device, n_refinements=nref)
+        imp = CAIRImputer(ckpt_dir=args.ckpt_dir, device=device, n_refinements=nref)
         spec_ckpt = sorted(_glob.glob(os.path.join(args.ckpt_dir, "*.pt")))[0]
 
     # per-record modality inputs (same spec helper as training -> identical layout).

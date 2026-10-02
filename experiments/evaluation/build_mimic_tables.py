@@ -12,7 +12,7 @@ import numpy as np
 MECHS = ["mcar", "mar", "nmar"]
 MRR_KEYS = ["mrr_tir", "mrr_tar180", "mrr_tbr70", "mrr_mage", "mrr_cv"]
 METHOD_ORDER = [
-    "refine",
+    "cair",
     "linear",
     "locf",
     "mean",

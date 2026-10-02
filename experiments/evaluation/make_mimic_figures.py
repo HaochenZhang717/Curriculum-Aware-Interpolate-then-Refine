@@ -95,7 +95,7 @@ def fig1_benchmark():
         ("mice", "MICE", "#b0c4de"),
         ("gpvae", "GP-VAE", "#c44e52"),
         ("mrnn", "MRNN", "#e07b7b"),
-        ("refine_mm", "REFINE (ours)", "#2ca02c"),
+        ("cair_mm", "CAIR (ours)", "#2ca02c"),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
     for ax, agg, title, unit in (
@@ -127,19 +127,17 @@ def fig1_benchmark():
 
 
 def fig2_ablation():
-    old = _agg(
-        os.path.join(RES, "toye_mimic_abp_n200.json")
-    )  # physio REFINE + baselines
+    old = _agg(os.path.join(RES, "toye_mimic_abp_n200.json"))  # physio CAIR + baselines
     new = _agg(os.path.join(RES, "toye_mimic_abp_realistic_full_n200.json"))
     fig, ax = plt.subplots(figsize=(6.2, 4.2))
     x = np.arange(len(MECHS))
     w = 0.26
     lin = [_rmse(new, "linear", mech) for mech in MECHS]
     phys = [
-        min(_rmse(old, "refine", mech), _rmse(old, "refine_mm", mech)) for mech in MECHS
+        min(_rmse(old, "cair", mech), _rmse(old, "cair_mm", mech)) for mech in MECHS
     ]
     real = [
-        min(_rmse(new, "refine", mech), _rmse(new, "refine_mm", mech)) for mech in MECHS
+        min(_rmse(new, "cair", mech), _rmse(new, "cair_mm", mech)) for mech in MECHS
     ]
     ax.bar(
         x - w,
@@ -154,7 +152,7 @@ def fig2_ablation():
         x,
         phys,
         w,
-        label="REFINE (CGM-mask training)",
+        label="CAIR (CGM-mask training)",
         color="#dd8452",
         edgecolor="black",
         linewidth=0.4,
@@ -163,7 +161,7 @@ def fig2_ablation():
         x + w,
         real,
         w,
-        label="REFINE (realistic-gap training)",
+        label="CAIR (realistic-gap training)",
         color="#2ca02c",
         edgecolor="black",
         linewidth=0.4,
@@ -178,7 +176,7 @@ def fig2_ablation():
     ax.set_xticks(x)
     ax.set_xticklabels([MECH_LABEL[m] for m in MECHS])
     ax.set_ylabel("ABP reconstruction RMSE (mmHg)")
-    ax.set_title("Training-mask alignment makes REFINE win (MIMIC-III ABP)")
+    ax.set_title("Training-mask alignment makes CAIR win (MIMIC-III ABP)")
     ax.legend(fontsize=9, loc="upper left")
     _save(fig, "fig2_mask_ablation")
 
@@ -189,7 +187,7 @@ def fig2_ablation():
 def fig3_rate_curves():
     agg = _agg(os.path.join(RES, "toye_mimic_abp_realistic_full_n200.json"))
     methods = [
-        ("refine_mm", "REFINE (ours)", "#2ca02c", "o", "-"),
+        ("cair_mm", "CAIR (ours)", "#2ca02c", "o", "-"),
         ("linear", "Linear", "#4c72b0", "s", "-"),
         ("knn", "k-NN", "#937860", "^", "--"),
         ("gpvae", "GP-VAE", "#c44e52", "v", ":"),
@@ -229,7 +227,7 @@ def fig4_downstream():
     bmethods = [
         ("linear", "Linear", "#4c72b0"),
         ("knn", "k-NN", "#937860"),
-        ("refine_mm", "REFINE (ours)", "#2ca02c"),
+        ("cair_mm", "CAIR (ours)", "#2ca02c"),
     ]
     x = np.arange(len(MECHS))
     w = 0.26
@@ -246,7 +244,7 @@ def fig4_downstream():
     ax.set_xticks(x)
     ax.set_xticklabels([MECH_LABEL[m] for m in MECHS])
     ax.set_ylabel("Clinical-burden MRR (time-in/above/below-range)")
-    ax.set_title("(a) Burden recovery: REFINE and k-NN vs linear")
+    ax.set_title("(a) Burden recovery: CAIR and k-NN vs linear")
     ax.legend(fontsize=9, loc="upper right")
 
     # (b) single-vital mortality AUROC vs NMAR rate: imputation matters, grows with missingness
@@ -257,7 +255,7 @@ def fig4_downstream():
     srates = sorted({r["rate"] for r in sweep})
     smeth = [
         ("real", "Oracle fill", "#000000", "o", "-"),
-        ("refine_mm", "REFINE (ours)", "#2ca02c", "s", "-"),
+        ("cair_mm", "CAIR (ours)", "#2ca02c", "s", "-"),
         ("linear", "Linear", "#4c72b0", "^", "--"),
         ("mean", "Mean-fill", "#bbbbbb", "v", ":"),
     ]

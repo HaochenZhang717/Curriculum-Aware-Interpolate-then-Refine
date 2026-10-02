@@ -159,7 +159,7 @@ def test_eval_real_ge_mean_auroc():
 
 
 def test_output_json_schema(tmp_path, monkeypatch):
-    """The run() output dict has the expected keys and row schema (CPU, no refine)."""
+    """The run() output dict has the expected keys and row schema (CPU, no cair)."""
     import pickle
 
     recs, labels, mean, std = _make_records(n=120, seed=2)

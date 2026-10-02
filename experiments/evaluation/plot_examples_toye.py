@@ -22,9 +22,9 @@ from matplotlib.patches import Patch
 MM = 1.0 / 25.4
 COL1, COL2 = 89 * MM, 183 * MM
 
-# Okabe-Ito colour-blind-safe palette. REFINE = blue (ours).
+# Okabe-Ito colour-blind-safe palette. CAIR = blue (ours).
 COLOR = {
-    "refine": "#0072B2",  # blue   - ours
+    "cair": "#0072B2",  # blue   - ours
     "linear": "#999999",  # grey
     "knn": "#E69F00",  # orange
     "gpvae": "#CC79A7",  # reddish purple
@@ -43,7 +43,7 @@ COLOR = {
     "savgol": "#D55E00",  # vermillion
 }
 LABEL = {
-    "refine": "REFINE (ours)",
+    "cair": "CAIR (ours)",
     "linear": "linear",
     "knn": "k-NN",
     "gpvae": "GP-VAE",
@@ -60,7 +60,7 @@ LABEL = {
     "spline": "cubic spline",
     "savgol": "Sav-Gol",
 }
-BALANCED = ["linear", "knn", "gpvae", "mrnn", "refine"]  # refine drawn last
+BALANCED = ["linear", "knn", "gpvae", "mrnn", "cair"]  # cair drawn last
 FULL13 = [
     "linear",
     "locf",
@@ -73,7 +73,7 @@ FULL13 = [
     "fourier",
     "gpvae",
     "mrnn",
-    "refine",
+    "cair",
 ]
 MECHS = ["mcar", "mar", "nmar"]
 MECH_TITLE = {"mcar": "MCAR", "mar": "MAR", "nmar": "NMAR"}
@@ -157,20 +157,20 @@ def panel_label(ax, s, x=-0.10, y=1.06):
 
 def pick(windows, mech, pct, ranks, min_target=8):
     """Return window dicts for the given (mech, pct) at the requested difficulty
-    ranks (fractional positions 0..1 by REFINE RMSE, ascending)."""
+    ranks (fractional positions 0..1 by CAIR RMSE, ascending)."""
     pool = [
         w
         for w in windows
         if w["mech"] == mech
         and abs(w["pct"] - pct) < 1e-6
         and w["n_target"] >= min_target
-        and "refine" in w["rmse"]
+        and "cair" in w["rmse"]
     ]
     if not pool:
         pool = [w for w in windows if w["mech"] == mech and abs(w["pct"] - pct) < 1e-6]
     if not pool:
         return []
-    pool = sorted(pool, key=lambda w: w["rmse"]["refine"])
+    pool = sorted(pool, key=lambda w: w["rmse"]["cair"])
     out, used = [], set()
     for fr in ranks:
         i = min(len(pool) - 1, max(0, int(round(fr * (len(pool) - 1)))))
@@ -181,7 +181,7 @@ def pick(windows, mech, pct, ranks, min_target=8):
     return out
 
 
-def plot_panel(ax, S, w, methods, title=None, emphasize="refine"):
+def plot_panel(ax, S, w, methods, title=None, emphasize="cair"):
     idx = w["idx"]
     x, hw = S.x, S.hw
     truth = S.mgdl("truth", idx)
@@ -228,7 +228,7 @@ def plot_panel(ax, S, w, methods, title=None, emphasize="refine"):
     # y-limits are anchored on the *meaningful* signal (truth + observed context
     # + the emphasized method) so degenerate baselines (e.g. GP-VAE/MRNN that
     # collapse to a near-constant fill) clip at the panel edge instead of
-    # compressing the REFINE-vs-truth detail.
+    # compressing the CAIR-vs-truth detail.
     core = [truth[orig & win], truth[om]]
     for m in order:
         if f"pred_{m}" not in S.d.files:
@@ -298,9 +298,9 @@ def legend_handles(methods):
                 [],
                 color=COLOR.get(m, "#777777"),
                 marker="o",
-                ls="-" if m == "refine" else "-",
-                lw=1.3 if m == "refine" else 0.8,
-                ms=3 if m == "refine" else 1.8,
+                ls="-" if m == "cair" else "-",
+                lw=1.3 if m == "cair" else 0.8,
+                ms=3 if m == "cair" else 1.8,
                 label=LABEL.get(m, m),
             )
         )
@@ -318,11 +318,11 @@ def save(fig, name, outdir):
 
 def rmse_title(w, methods):
     r = w["rmse"]
-    rr = r.get("refine", float("nan"))
-    base = {m: r[m] for m in methods if m != "refine" and m in r}
+    rr = r.get("cair", float("nan"))
+    base = {m: r[m] for m in methods if m != "cair" and m in r}
     if base:
         bm = min(base, key=base.get)
-        return f"RMSE  REFINE {rr:.1f} · best base {LABEL.get(bm, bm)} {base[bm]:.1f}"
+        return f"RMSE  CAIR {rr:.1f} · best base {LABEL.get(bm, bm)} {base[bm]:.1f}"
     return f"RMSE {rr:.1f}"
 
 
@@ -363,7 +363,7 @@ def fig_main(S, methods, outdir):
         fontsize=6,
     )
     fig.suptitle(
-        f"{dtitle(S)} — REFINE vs baselines under real-world "
+        f"{dtitle(S)}: CAIR vs baselines under real-world "
         f"missingness (Toye protocol)",
         fontsize=7.5,
         y=1.005,
@@ -391,7 +391,7 @@ def fig_mech_gallery(S, mech, methods, outdir, ncol=4):
                 continue
             w = sel[c]
             tags = ["easiest", "", "", "hardest"]
-            tt = f"{int(round(pct*100))}% · REFINE {w['rmse'].get('refine', float('nan')):.1f}"
+            tt = f"{int(round(pct*100))}% · CAIR {w['rmse'].get('cair', float('nan')):.1f}"
             plot_panel(ax, S, w, methods, title=tt)
             panel_label(ax, next(letters))
             if c == 0:
@@ -409,8 +409,8 @@ def fig_mech_gallery(S, mech, methods, outdir, ncol=4):
         fontsize=6,
     )
     fig.suptitle(
-        f"{dtitle(S)} — {MECH_TITLE[mech]} imputation examples "
-        f"(easy→hard by REFINE RMSE)",
+        f"{dtitle(S)}: {MECH_TITLE[mech]} imputation examples "
+        f"(easy→hard by CAIR RMSE)",
         fontsize=7.5,
         y=1.005,
     )
@@ -452,7 +452,7 @@ def fig_full13(S, outdir, n=3):
         fontsize=5.6,
     )
     fig.suptitle(
-        f"{dtitle(S)} — all 13 methods on structured gaps", fontsize=7.5, y=1.02
+        f"{dtitle(S)}: all 13 methods on structured gaps", fontsize=7.5, y=1.02
     )
     fig.tight_layout(rect=(0, 0.06, 1, 0.98), w_pad=1.2)
     save(fig, f"{tag(S)}_full13", outdir)
@@ -488,7 +488,7 @@ def write_tables(S, tab_rows, outdir):
             )
     # aggregate mean in-gap RMSE per method per (mech,rate) over ALL windows
     with open(md, "w") as f:
-        f.write(f"# {dtitle(S)} — in-gap RMSE ({S.units})\n\n")
+        f.write(f"# {dtitle(S)}: in-gap RMSE ({S.units})\n\n")
         f.write(
             "Mean over all captured windows, per mechanism × missingness "
             "rate. Lowest per row in **bold**.\n\n"

@@ -27,10 +27,10 @@ def _cell(method, mech, pct, rmse, cu, mort):
 
 def test_tables_emit_rmse_and_strata(tmp_path):
     cells = []
-    for m in ("refine", "linear"):
+    for m in ("cair", "linear"):
         for mech in ("mcar", "mar", "nmar"):
             for pct in (0.1, 0.2):
-                r = 5.0 if m == "refine" else 7.0
+                r = 5.0 if m == "cair" else 7.0
                 cells += [
                     _cell(m, mech, pct, r, "MICU", 0),
                     _cell(m, mech, pct, r + 1, "SICU", 1),
@@ -45,7 +45,7 @@ def test_tables_emit_rmse_and_strata(tmp_path):
         env=env,
     )
     rmse_md = (out / "mimic_abp_rmse.md").read_text()
-    assert "refine" in rmse_md and "linear" in rmse_md and "nmar" in rmse_md.lower()
+    assert "cair" in rmse_md and "linear" in rmse_md and "nmar" in rmse_md.lower()
     strat_md = (out / "mimic_abp_strata.md").read_text()
     assert "MICU" in strat_md and "SICU" in strat_md
     assert (out / "mimic_abp_mrr.md").exists()

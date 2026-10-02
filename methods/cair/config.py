@@ -1,4 +1,4 @@
-"""Canonical REFINE publish-time configuration."""
+"""Canonical CAIR publish-time configuration."""
 
 from __future__ import annotations
 

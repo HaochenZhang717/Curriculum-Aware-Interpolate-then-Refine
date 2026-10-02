@@ -19,7 +19,7 @@ def p(*a):
     return os.path.join(BASE, *a)
 
 
-# create_physiological_mask is used only by the training Dataset (CGMV66Dataset),
+# create_physiological_mask is used only by the training Dataset (CAIRDataset),
 # NOT by inference (impute()). Import it robustly from the clean repo's utils so the
 # model + feature code loads anywhere; fall back to None if unavailable.
 try:
@@ -30,7 +30,7 @@ except Exception:  # pragma: no cover
     except Exception:
         create_physiological_mask = None
 
-# Refine._encode fills the interpolation slots; conditioning keeps 42 features.
+# CAIR._encode fills the interpolation slots; conditioning keeps 42 features.
 from cgm_datasets import load_dataset_splits
 
 CGM_STD = 42.33
@@ -43,7 +43,7 @@ N_COND_PCHIP = 2
 N_COND_SLOPE = 4
 N_COND_ACCEL = 4
 N_COND_SMOOTH = 4
-N_COND_V60 = (
+N_COND_TEMPORAL = (
     N_COND_BASE
     + N_COND_WIN
     + N_COND_GAP
@@ -54,7 +54,7 @@ N_COND_V60 = (
     + N_COND_SMOOTH
 )  # 37
 N_COND_CTX = 5  # gap-context: pre_mean, pre_std, post_mean, post_std, gap_length
-N_COND = N_COND_V60 + N_COND_CTX  # 42
+N_COND = N_COND_TEMPORAL + N_COND_CTX  # 42
 
 PASS1_WEIGHT = 0.15
 PASS2_WEIGHT = 0.35
@@ -188,15 +188,15 @@ def compute_gap_distances(eval_mask, W):
 
 
 def compute_linterp_features(eval_mask, ts, W):
-    """REFINE: zero-stub. The linear-interp value-slots (cond cols 21-22) are
-    overwritten by the learned neural interpolator in Refine._encode, so no
+    """CAIR: zero-stub. The linear-interp value-slots (cond cols 21-22) are
+    overwritten by the learned neural interpolator in CAIR._encode, so no
     classical interpolation is computed here."""
     return np.zeros((W, 2), dtype=np.float32)
 
 
 def compute_pchip_features(eval_mask, ts, W):
-    """REFINE: zero-stub. The PCHIP value-slots (cond cols 23-24) are overwritten
-    by the learned neural interpolator in Refine._encode (no scipy / no classical
+    """CAIR: zero-stub. The PCHIP value-slots (cond cols 23-24) are overwritten
+    by the learned neural interpolator in CAIR._encode (no scipy / no classical
     interpolation used anywhere in this method)."""
     return np.zeros((W, 2), dtype=np.float32)
 
@@ -318,7 +318,7 @@ def compute_smooth_slope_features(eval_mask, ts, W, N=5):
     return out
 
 
-class CGMMAEV66(nn.Module):
+class CAIRBackbone(nn.Module):
     """Transformer refiner with 42 conditioning features and three training passes."""
 
     def __init__(
@@ -345,9 +345,7 @@ class CGMMAEV66(nn.Module):
         self.day_emb = nn.Embedding(4, d_model)
         self.tod_emb = nn.Embedding(288, d_model)
         self.dom_emb = nn.Embedding(max(1, n_datasets), d_model)
-        nn.init.zeros_(
-            self.dom_emb.weight
-        )  # AI-READI-only training == published REFINE
+        nn.init.zeros_(self.dom_emb.weight)  # AI-READI-only training == published CAIR
         self.mask_tok = nn.Parameter(torch.randn(1, 1, d_model) * 0.02)
         self.cond_proj = nn.Sequential(
             nn.Linear(N_COND + self.n_extra_cond, 64),
@@ -593,18 +591,22 @@ class CGMMAEV66(nn.Module):
             return np.clip(result1, -6.0, 6.0).astype(np.float32)
         cur_result = result1.astype(np.float32)
         for _ in range(n_refinements):
-            code_refine = np.where(mask.astype(bool), 1, 2).astype(np.int64)
-            cond_refine = precompute_combined(cur_result, np.ones(T, dtype=bool))
-            pred_refine = _sliding_impute(cur_result, code_refine, cond_refine)
-            cur_result = np.where(mask.astype(bool), ts, pred_refine).astype(np.float32)
+            refinement_code = np.where(mask.astype(bool), 1, 2).astype(np.int64)
+            refinement_cond = precompute_combined(cur_result, np.ones(T, dtype=bool))
+            refinement_pred = _sliding_impute(
+                cur_result, refinement_code, refinement_cond
+            )
+            cur_result = np.where(mask.astype(bool), ts, refinement_pred).astype(
+                np.float32
+            )
         return np.clip(cur_result, -6.0, 6.0).astype(np.float32)
 
 
-class CGMV66Wrapper:
+class CAIRBackboneImputer:
     def __init__(self, ckpt_path: str, device: str = "cpu"):
         ck = torch.load(ckpt_path, map_location="cpu", weights_only=False)
         cfg = ck.get("config", {})
-        self.model = CGMMAEV66(
+        self.model = CAIRBackbone(
             **{
                 k: v
                 for k, v in cfg.items()
@@ -618,7 +620,7 @@ class CGMV66Wrapper:
         self.model.to(torch.device(device))
         ep = ck.get("epoch", "?")
         val = ck.get("val_rmse", float("nan"))
-        print(f"  CGM-MAE-v66 loaded (epoch {ep}, val={val:.2f} mg/dL)")
+        print(f"  CAIR backbone loaded (epoch {ep}, val={val:.2f} mg/dL)")
 
     def impute(self, full_ts, obs_mask):
         return self.model.impute(
@@ -629,8 +631,8 @@ class CGMV66Wrapper:
 STRATS = ["meal_post", "sleep", "ascending", "dipping", "combined"]
 
 
-class CGMV66Dataset(Dataset):
-    """8L, 3-pass MSE, N_COND=42 (37 v60 features + 5 gap-context features)."""
+class CAIRDataset(Dataset):
+    """8L, 3-pass MSE, N_COND=42 (37 temporal features + 5 gap-context features)."""
 
     def __init__(
         self,
@@ -882,10 +884,12 @@ def train(args):
     print(
         f"  stage={args.stage}  datasets={dom_names}  train={len(train_r)} val={len(val_r)}"
     )
-    print("Building train dataset (W=576, 42-feat, 3-pass MSE, 8L, v60+gap-ctx)...")
-    ds_train = CGMV66Dataset(train_r, window=args.window, stride=144, seed=42)
+    print(
+        "Building train dataset (W=576, 42-feat, 3-pass MSE, 8L, temporal and gap-context features)..."
+    )
+    ds_train = CAIRDataset(train_r, window=args.window, stride=144, seed=42)
     print("Building val dataset ...")
-    ds_val = CGMV66Dataset(val_r, window=args.window, stride=args.window, seed=99)
+    ds_val = CAIRDataset(val_r, window=args.window, stride=args.window, seed=99)
     print(f"  train windows={len(ds_train)}  val windows={len(ds_val)}")
     if args.stage == "finetune":
         dl_train = DataLoader(
@@ -907,7 +911,7 @@ def train(args):
         num_workers=2,
         pin_memory=True,
     )
-    model = CGMMAEV66(
+    model = CAIRBackbone(
         window=args.window,
         d_model=128,
         n_heads=8,
@@ -915,8 +919,8 @@ def train(args):
         ff_dim=512,
         n_datasets=n_datasets,
     ).to(device)
-    save_path = p("cgm_mae_v66_imputer.pt")
-    snap_dir = p("checkpoints_v66")
+    save_path = p("cair_backbone.pt")
+    snap_dir = p("checkpoints_cair_backbone")
     os.makedirs(snap_dir, exist_ok=True)
     SNAP_EPOCHS = {10, 20, 30, 40, 50}
     best_val = args.min_val
@@ -1031,7 +1035,7 @@ def train(args):
             torch.save(ckpt_data, save_path)
             print(f"  → Saved best (pass3 val={best_val:.2f})", flush=True)
         if epoch in SNAP_EPOCHS:
-            snap_path = os.path.join(snap_dir, f"cgm_mae_v66_ep{epoch:02d}.pt")
+            snap_path = os.path.join(snap_dir, f"cair_backbone_epoch{epoch:02d}.pt")
             torch.save(ckpt_data, snap_path)
             print(f"  → Snapshot: {snap_path}", flush=True)
 

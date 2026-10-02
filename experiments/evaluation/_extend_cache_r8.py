@@ -5,7 +5,7 @@ import os, glob, pickle, json
 import numpy as np
 import torch
 
-from methods.refine import RefineImputer
+from methods.cair import CAIRImputer
 from cgm_datasets.multimodal.modality_spec import build_mod_and_ctx, rung_active
 
 CGM_MEAN, CGM_STD = 132.05, 42.33
@@ -19,9 +19,9 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def load_rung(prefix, device):
-    paths = sorted(glob.glob(f"method_checkpoints/refine/mm/{prefix}_m*_seed*.pt"))
+    paths = sorted(glob.glob(f"method_checkpoints/cair/mm/{prefix}_m*_seed*.pt"))
     assert len(paths) == 5, f"{prefix}: {len(paths)} ckpts"
-    imp = RefineImputer(ckpt_paths=paths, device=device)
+    imp = CAIRImputer(ckpt_paths=paths, device=device)
     cfg = torch.load(paths[0], map_location="cpu", weights_only=False)["config"]
     return imp, cfg.get("ts_mods", []) or [], cfg.get("static_blocks", []) or []
 

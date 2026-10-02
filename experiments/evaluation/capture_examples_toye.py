@@ -80,15 +80,15 @@ def run(args):
 
     rates = [float(x) for x in args.rates.split(",")]
 
-    refine = None
-    if not args.skip_refine:
-        from methods.refine import RefineImputer
+    cair = None
+    if not args.skip_cair:
+        from methods.cair import CAIRImputer
 
-        rpaths = sorted(_glob.glob(args.refine_ckpt_glob))[: args.n_refine_members]
-        assert rpaths, f"no REFINE checkpoints matched {args.refine_ckpt_glob}"
-        refine = RefineImputer(ckpt_paths=rpaths, device=device)
+        rpaths = sorted(_glob.glob(args.cair_ckpt_glob))[: args.n_cair_members]
+        assert rpaths, f"no CAIR checkpoints matched {args.cair_ckpt_glob}"
+        cair = CAIRImputer(ckpt_paths=rpaths, device=device)
 
-    methods = list(INPROC_BASELINES.keys()) + (["refine"] if refine is not None else [])
+    methods = list(INPROC_BASELINES.keys()) + (["cair"] if cair is not None else [])
     pypots_methods = ["mrnn", "gpvae"] if args.pypots_python else []
     all_methods = methods + pypots_methods
 
@@ -165,13 +165,13 @@ def run(args):
                     preds_this[name] = np.asarray(
                         fn(seen, obs.astype(np.float32)), dtype=np.float32
                     ).reshape(-1)
-                if refine is not None:
+                if cair is not None:
                     fe = full_orig.copy()
                     fe[t_lo:t_hi] = obs
                     fm = full_ts.copy()
                     fm[~fe] = 0.0
-                    preds_this["refine"] = np.asarray(
-                        refine.impute(fm, fe.astype(np.float32)), dtype=np.float32
+                    preds_this["cair"] = np.asarray(
+                        cair.impute(fm, fe.astype(np.float32)), dtype=np.float32
                     )[t_lo:t_hi]
 
                 rmse = {
@@ -262,7 +262,7 @@ def run(args):
         "mechs": MECHS,
         "n_participants": len(test),
         "mar_skipped_persons": mar_skipped,
-        "refine_ckpt_glob": args.refine_ckpt_glob,
+        "cair_ckpt_glob": args.cair_ckpt_glob,
         "windows": win_meta,
     }
     json.dump(meta_out, open(args.out + "_meta.json", "w"), indent=2)
@@ -285,13 +285,13 @@ def main():
         default="0.15,0.30",
         help="comma-separated missingness rates to capture",
     )
-    ap.add_argument("--skip_refine", action="store_true")
+    ap.add_argument("--skip_cair", action="store_true")
     ap.add_argument(
-        "--refine_ckpt_glob",
+        "--cair_ckpt_glob",
         required=True,
-        help="Glob for REFINE ensemble checkpoints (absolute or repo-relative).",
+        help="Glob for CAIR ensemble checkpoints (absolute or repo-relative).",
     )
-    ap.add_argument("--n_refine_members", type=int, default=5)
+    ap.add_argument("--n_cair_members", type=int, default=5)
     ap.add_argument(
         "--mm_pkl",
         default=DEFAULT_MM,
@@ -308,12 +308,10 @@ def main():
     )
     args = ap.parse_args()
     # allow repo-relative globs
-    if not os.path.isabs(args.refine_ckpt_glob) and not _glob.glob(
-        args.refine_ckpt_glob
-    ):
-        cand = os.path.join(ROOT, args.refine_ckpt_glob)
+    if not os.path.isabs(args.cair_ckpt_glob) and not _glob.glob(args.cair_ckpt_glob):
+        cand = os.path.join(ROOT, args.cair_ckpt_glob)
         if _glob.glob(cand):
-            args.refine_ckpt_glob = cand
+            args.cair_ckpt_glob = cand
     run(args)
 
 

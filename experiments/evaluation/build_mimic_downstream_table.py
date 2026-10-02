@@ -15,8 +15,8 @@ THR = [
     "mrr_tbr70",
 ]  # threshold-burden metrics (not gamed by variability)
 DISP = {
-    "refine": "\\method\\ (uni)",
-    "refine_mm": "\\textbf{\\method\\ (mm)}",
+    "cair": "\\method\\ (uni)",
+    "cair_mm": "\\textbf{\\method\\ (mm)}",
     "linear": "linear interp",
     "locf": "LOCF",
     "fourier": "Fourier",
@@ -36,7 +36,7 @@ GROUPS = [
         "Tabular / neural (recovers burden, high RMSE)",
         ["knn", "hotdeck", "mice", "mrnn", "gpvae"],
     ),
-    ("\\method\\ (both)", ["refine", "refine_mm"]),
+    ("\\method\\ (both)", ["cair", "cair_mm"]),
 ]
 
 

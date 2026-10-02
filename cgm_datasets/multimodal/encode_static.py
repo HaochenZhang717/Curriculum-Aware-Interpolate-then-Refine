@@ -121,7 +121,7 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # Compute nodes have NO internet: load DINOv2 fully offline from the shared
-    # local cache (repo + weights copied under refine-clean/.dinov2_cache/).
+    # local cache (repo + weights copied under cair-clean/.dinov2_cache/).
     HUB = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", ".dinov2_cache")
     )

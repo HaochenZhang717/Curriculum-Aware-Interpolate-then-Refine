@@ -1,11 +1,11 @@
-"""Scan the multimodal test split to find FIVE good example gaps per strategy (5 strategies x 5 examples = 25 panels), then run every completed REFINE ladder rung (every prefix with exactly 5 ensemble checkpoints) on each gap and cache the imputed curves + per-gap RMSEs to a .npz.."""
+"""Scan the multimodal test split to find FIVE good example gaps per strategy (5 strategies x 5 examples = 25 panels), then run every completed CAIR ladder rung (every prefix with exactly 5 ensemble checkpoints) on each gap and cache the imputed curves + per-gap RMSEs to a .npz.."""
 
 from utils.paths import DATA_ROOT, REPO_ROOT, CACHE_ROOT
 import os, glob, pickle, json
 import numpy as np
 import torch
 
-from methods.refine import RefineImputer
+from methods.cair import CAIRImputer
 from cgm_datasets.multimodal.modality_spec import build_mod_and_ctx, rung_active
 
 from utils.physiological_masking import create_physiological_mask
@@ -39,7 +39,7 @@ def available_rungs():
     """Return [(prefix, rung_idx, cond_count), ...] for prefixes with 5 ckpts."""
     out = []
     for prefix, rung, cc in RUNG_ORDER:
-        n = len(glob.glob(f"method_checkpoints/refine/mm/{prefix}_m*_seed*.pt"))
+        n = len(glob.glob(f"method_checkpoints/cair/mm/{prefix}_m*_seed*.pt"))
         if n == 5:
             out.append((prefix, rung, cc))
         else:
@@ -48,9 +48,9 @@ def available_rungs():
 
 
 def load_rung(prefix, device):
-    paths = sorted(glob.glob(f"method_checkpoints/refine/mm/{prefix}_m*_seed*.pt"))
+    paths = sorted(glob.glob(f"method_checkpoints/cair/mm/{prefix}_m*_seed*.pt"))
     assert len(paths) == 5, f"{prefix}: {len(paths)} ckpts"
-    imp = RefineImputer(ckpt_paths=paths, device=device)
+    imp = CAIRImputer(ckpt_paths=paths, device=device)
     cfg = torch.load(paths[0], map_location="cpu", weights_only=False)["config"]
     return imp, cfg.get("ts_mods", []) or [], cfg.get("static_blocks", []) or []
 

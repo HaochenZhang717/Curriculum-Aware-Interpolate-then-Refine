@@ -24,7 +24,7 @@ def test_aggregate_emits_native_and_znorm(tmp_path):
     res = tmp_path / "results"
     res.mkdir()
     _write(res / "hr_shortgap_pchip.json", "pchip", [10.0, 12.0, 14.0, 16.0])
-    _write(res / "hr_shortgap_refine.json", "refine", [8.0, 9.0, 10.0, 11.0])
+    _write(res / "hr_shortgap_cair.json", "cair", [8.0, 9.0, 10.0, 11.0])
     out = tmp_path / "report.md"
     subprocess.run(
         [
@@ -42,8 +42,8 @@ def test_aggregate_emits_native_and_znorm(tmp_path):
         check=True,
     )
     txt = out.read_text()
-    assert "pchip" in txt and "refine" in txt
+    assert "pchip" in txt and "cair" in txt
     assert "15min" in txt or "15 min" in txt
     # native value present, and z-normalized = native / std present
-    assert "8.00" in txt  # refine native 15min
-    assert f"{8.0/14.968:.3f}" in txt  # refine z-normalized 15min
+    assert "8.00" in txt  # cair native 15min
+    assert f"{8.0/14.968:.3f}" in txt  # cair z-normalized 15min

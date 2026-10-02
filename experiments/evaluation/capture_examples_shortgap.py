@@ -1,4 +1,4 @@
-"""Capture per-window imputation TRAJECTORIES for the cross-dataset short-gap galleries (zero-shot REFINE vs classical interpolators on Ohio / HUPA-UCM / Shanghai)."""
+"""Capture per-window imputation TRAJECTORIES for the cross-dataset short-gap galleries (zero-shot CAIR vs classical interpolators on Ohio / HUPA-UCM / Shanghai)."""
 
 from __future__ import annotations
 
@@ -25,15 +25,15 @@ from experiments.evaluation.eval_short_gaps import build_imputer, rmse_mgdl
 CLASSICAL = ["akima", "pchip", "linear", "spline", "savgol"]
 
 
-def _build_methods(refine_ckpts, device):
+def _build_methods(cair_ckpts, device):
     """Return {method_name: impute_fn(ts, mask)->pred}, plus ts_mods/static."""
     fns = {}
-    # REFINE (published ensemble, zero-shot)
+    # CAIR (published ensemble, zero-shot)
     ns = types.SimpleNamespace(
-        method="refine", ckpt=None, ckpt_paths=",".join(refine_ckpts), ckpt_dir=None
+        method="cair", ckpt=None, ckpt_paths=",".join(cair_ckpts), ckpt_dir=None
     )
     rfn, ts_mods, static_blocks = build_imputer(ns, device)
-    fns["refine"] = lambda ts, m, _f=rfn: _f(ts, m, None, None)
+    fns["cair"] = lambda ts, m, _f=rfn: _f(ts, m, None, None)
     # classical baselines (ignore modality/ctx)
     for name in CLASSICAL:
         ns = types.SimpleNamespace(
@@ -64,12 +64,12 @@ def run(args):
     S = max(1, args.stride)
     ML = args.impute_max_len
 
-    refine_ckpts = sorted(_glob.glob(args.refine_ckpt_glob))[: args.n_refine_members]
-    assert refine_ckpts, f"no REFINE checkpoints matched {args.refine_ckpt_glob}"
-    fns, ts_mods, static_blocks = _build_methods(refine_ckpts, device)
+    cair_ckpts = sorted(_glob.glob(args.cair_ckpt_glob))[: args.n_cair_members]
+    assert cair_ckpts, f"no CAIR checkpoints matched {args.cair_ckpt_glob}"
+    fns, ts_mods, static_blocks = _build_methods(cair_ckpts, device)
     from cgm_datasets.multimodal.modality_spec import build_mod_and_ctx
 
-    methods = ["refine"] + CLASSICAL
+    methods = ["cair"] + CLASSICAL
 
     W_truth, W_obs, W_tgt = [], [], []
     W_pred = {m: [] for m in methods}
@@ -182,7 +182,7 @@ def run(args):
         "methods": methods,
         "gaps_min": [Lg * 5 for Lg in gaps],
         "n_participants": len(test),
-        "refine_ckpt_glob": args.refine_ckpt_glob,
+        "cair_ckpt_glob": args.cair_ckpt_glob,
         "windows": win_meta,
     }
     json.dump(meta_out, open(args.out + "_meta.json", "w"), indent=2)
@@ -204,8 +204,8 @@ def main():
     ap.add_argument("--impute_max_len", type=int, default=0)
     ap.add_argument("--n_participants", type=int, default=40)
     ap.add_argument("--n_placements", type=int, default=3)
-    ap.add_argument("--refine_ckpt_glob", required=True)
-    ap.add_argument("--n_refine_members", type=int, default=5)
+    ap.add_argument("--cair_ckpt_glob", required=True)
+    ap.add_argument("--n_cair_members", type=int, default=5)
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     run(args)

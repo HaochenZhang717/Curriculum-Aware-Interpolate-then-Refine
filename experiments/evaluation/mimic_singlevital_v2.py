@@ -67,12 +67,12 @@ ALL_METHODS = (
     "missforest",
     "locf",
     "fourier",
-    "refine",
-    "refine_mm",
+    "cair",
+    "cair_mm",
 )
 DEFAULT_METHODS = (
     "real,mean,mode,forward_fill,linear,pchip,akima,spline,savgol,"
-    "knn,mice,missforest,refine,refine_mm"
+    "knn,mice,missforest,cair,cair_mm"
 )
 DEFAULT_MECHS = "mcar,nmar"
 DEFAULT_RATES = "0.1,0.2,0.3"
@@ -389,41 +389,37 @@ def _predict_cnn_probs(ensemble, z_traces: np.ndarray, device: str) -> np.ndarra
     return (1.0 / (1.0 + np.exp(-mean_logits))).astype(np.float32)
 
 
-def _load_refine_imputers(
+def _load_cair_imputers(
     methods: list[str], dataset: str, ckpt_suffix: str, device: str
 ):
     methods = list(methods)
-    refine = None
-    refine_mm = None
+    cair = None
+    cair_mm = None
     ts_mods = list(DEFAULT_TS_MODS)
-    ckpt_dir = os.path.join(
-        ROOT, "method_checkpoints", f"refine_{dataset}{ckpt_suffix}"
-    )
+    ckpt_dir = os.path.join(ROOT, "method_checkpoints", f"cair_{dataset}{ckpt_suffix}")
 
-    if "refine" in methods:
+    if "cair" in methods:
         paths = sorted(glob.glob(os.path.join(ckpt_dir, "uni_seed*.pt")))
         if paths:
-            from methods.refine import RefineImputer
+            from methods.cair import CAIRImputer
 
-            refine = RefineImputer(ckpt_paths=paths, device=device)
+            cair = CAIRImputer(ckpt_paths=paths, device=device)
         else:
-            print(f"[skip] method=refine no uni_seed*.pt under {ckpt_dir}", flush=True)
-            methods = [m for m in methods if m != "refine"]
+            print(f"[skip] method=cair no uni_seed*.pt under {ckpt_dir}", flush=True)
+            methods = [m for m in methods if m != "cair"]
 
-    if "refine_mm" in methods:
+    if "cair_mm" in methods:
         paths = sorted(glob.glob(os.path.join(ckpt_dir, "mm_seed*.pt")))
         if paths:
-            from methods.refine import RefineImputer
+            from methods.cair import CAIRImputer
 
-            refine_mm = RefineImputer(ckpt_paths=paths, device=device)
+            cair_mm = CAIRImputer(ckpt_paths=paths, device=device)
             cfg = _load_torch_checkpoint(paths[0]).get("config", {})
             ts_mods = cfg.get("ts_mods", ts_mods) or ts_mods
         else:
-            print(
-                f"[skip] method=refine_mm no mm_seed*.pt under {ckpt_dir}", flush=True
-            )
-            methods = [m for m in methods if m != "refine_mm"]
-    return methods, refine, refine_mm, ts_mods
+            print(f"[skip] method=cair_mm no mm_seed*.pt under {ckpt_dir}", flush=True)
+            methods = [m for m in methods if m != "cair_mm"]
+    return methods, cair, cair_mm, ts_mods
 
 
 def _compute_auroc(y: np.ndarray, probs: np.ndarray):
@@ -524,15 +520,15 @@ def evaluate(
     mechs: list[str],
     rates: list[float],
     device: str,
-    refine=None,
-    refine_mm=None,
+    cair=None,
+    cair_mm=None,
     ts_mods=None,
 ):
     active_labels = [label for label in LABELS if label in models]
     if not active_labels:
         return []
 
-    need_mm = refine_mm is not None and "refine_mm" in methods
+    need_mm = cair_mm is not None and "cair_mm" in methods
     if need_mm:
         from cgm_datasets.multimodal.modality_spec import build_mod_and_ctx
 
@@ -589,13 +585,13 @@ def evaluate(
                             else float(reference.mean())
                         )
                         filled[tgt] = fill
-                    elif method in ("refine", "refine_mm"):
-                        imputer = refine if method == "refine" else refine_mm
+                    elif method in ("cair", "cair_mm"):
+                        imputer = cair if method == "cair" else cair_mm
                         if imputer is None:
                             continue
                         z_seen = z.copy()
                         z_seen[~obsb] = 0.0
-                        if method == "refine_mm":
+                        if method == "cair_mm":
                             pred_z = imputer.impute(
                                 z_seen,
                                 obsb.astype(np.float32),
@@ -722,7 +718,7 @@ def main():
                 json.dump(out, f, indent=2)
         return
 
-    methods, refine, refine_mm, ts_mods = _load_refine_imputers(
+    methods, cair, cair_mm, ts_mods = _load_cair_imputers(
         methods, args.dataset, args.ckpt_suffix, device
     )
     print(f"[eval] methods={methods} mechs={mechs} rates={rates}", flush=True)
@@ -740,8 +736,8 @@ def main():
         mechs=mechs,
         rates=rates,
         device=device,
-        refine=refine,
-        refine_mm=refine_mm,
+        cair=cair,
+        cair_mm=cair_mm,
         ts_mods=ts_mods,
     )
     print_tables(results, methods, mechs, rates)

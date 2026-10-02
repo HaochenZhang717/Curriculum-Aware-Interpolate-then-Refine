@@ -40,7 +40,7 @@ def main():
     base_mean = full["mean"] if full else float("nan")
 
     print(
-        "\n=== REFINE architectural ablation (AI-READI, N=50 short-gap headline protocol) ==="
+        "\n=== CAIR architectural ablation (AI-READI, N=50 short-gap headline protocol) ==="
     )
     print(
         f"  RMSE mg/dL by gap length.  full = control (residual, aux=0.7, gru interp, 8-layer, infer 2 passes).\n"

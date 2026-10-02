@@ -17,9 +17,9 @@ EXTERNAL = [
     ("mimic_abp", "MIMIC-III ABP", "ICU", "5-min"),
     ("mimic_hr", "MIMIC-III HR", "ICU", "5-min"),
 ]
-# method key -> display label ; row order (REFINE first, then interpolators, AR, smoothers, naive)
+# method key -> display label ; row order (CAIR first, then interpolators, AR, smoothers, naive)
 METHODS = [
-    ("refine", "REFINE (zero-shot)"),
+    ("cair", "CAIR (zero-shot)"),
     ("akima", "akima"),
     ("pchip", "PCHIP"),
     ("linear", "linear"),
@@ -30,9 +30,9 @@ METHODS = [
     ("forward_fill", "forward-fill"),
 ]
 # external datasets also get the fine-tuned (per-dataset K-fold CV) row as the headline "our method"
-EXT_METHODS = [("refine_ft", "REFINE (fine-tuned, CV)")] + METHODS
-# same rows for the in-domain reference block, only the REFINE label changes (no fine-tuned/zero-shot split)
-RLABELS = [("refine", "REFINE (in-domain)")] + METHODS[1:]
+EXT_METHODS = [("cair_ft", "CAIR (fine-tuned, CV)")] + METHODS
+# same rows for the in-domain reference block, only the CAIR label changes (no fine-tuned/zero-shot split)
+RLABELS = [("cair", "CAIR (in-domain)")] + METHODS[1:]
 
 
 def load_cv_finetuned(dataset):
@@ -75,7 +75,7 @@ def load_cv_finetuned(dataset):
 
 
 def load_cell(dataset, method):
-    if method == "refine_ft":
+    if method == "cair_ft":
         return load_cv_finetuned(dataset)
     p = os.path.join(RES, f"shortgap_{dataset}_{method}.json")
     if not os.path.exists(p):
@@ -136,7 +136,7 @@ def main():
     md = []
     md.append("# Cross-dataset short-gap RMSE (mg/dL)\n")
     md.append(
-        "Two REFINE rows per external cohort: **fine-tuned** = the AI-READI model "
+        "Two CAIR rows per external cohort: **fine-tuned** = the AI-READI model "
         "fine-tuned on that dataset, tested on held-out subjects via K-fold "
         "cross-validation (Ohio leave-one-out=6 folds; HUPA/Shanghai 5-fold); "
         "**zero-shot** = the published AI-READI ensemble applied with no retraining. "
@@ -153,7 +153,7 @@ def main():
             "native_cadence": native,
             "cells": {m: (rows[m] if rows[m] else None) for m, _ in EXT_METHODS},
         }
-        ft = rows.get("refine_ft")
+        ft = rows.get("cair_ft")
         nfolds = ft.get("n_folds") if ft else None
         note = ""
         if native == "15-min":
@@ -180,9 +180,9 @@ def main():
         md.append("\n## AI-READI (in-domain reference)\n")
         md.append(fmt_table(ref, RLABELS))
         md.append(
-            "\n*Same published REFINE ensemble, evaluated in-domain on the AI-READI "
+            "\n*Same published CAIR ensemble, evaluated in-domain on the AI-READI "
             "**test** split (no pooling; the model trained on AI-READI train). Shows the "
-            "reference REFINE-vs-baselines gap on data from its own distribution.*\n"
+            "reference CAIR-vs-baselines gap on data from its own distribution.*\n"
         )
 
     out_md = os.path.join(ROOT, "docs", "cross_dataset_shortgap.md")

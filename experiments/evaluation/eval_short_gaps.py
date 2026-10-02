@@ -27,26 +27,22 @@ def build_imputer(args, device):
     Baselines ignore mod/ctx and return empty modality specs.
     """
     method = args.method
-    if method == "refine":
+    if method == "cair":
         import torch
-        from methods.refine import RefineImputer
+        from methods.cair import CAIRImputer
 
         nref = int(args.n_refinements)
         if args.ckpt_paths:
             paths = [p for p in args.ckpt_paths.split(",") if p]
-            imp = RefineImputer(ckpt_paths=paths, device=device, n_refinements=nref)
+            imp = CAIRImputer(ckpt_paths=paths, device=device, n_refinements=nref)
             spec_ckpt = paths[0]
         elif args.ckpt:
-            imp = RefineImputer(
-                ckpt_paths=[args.ckpt], device=device, n_refinements=nref
-            )
+            imp = CAIRImputer(ckpt_paths=[args.ckpt], device=device, n_refinements=nref)
             spec_ckpt = args.ckpt
         else:
             import glob as _glob
 
-            imp = RefineImputer(
-                ckpt_dir=args.ckpt_dir, device=device, n_refinements=nref
-            )
+            imp = CAIRImputer(ckpt_dir=args.ckpt_dir, device=device, n_refinements=nref)
             spec_ckpt = sorted(_glob.glob(os.path.join(args.ckpt_dir, "*.pt")))[0]
         cfg = torch.load(spec_ckpt, map_location="cpu", weights_only=False).get(
             "config", {}
@@ -108,7 +104,7 @@ def main(args=None):
         "--method",
         required=True,
         choices=[
-            "refine",
+            "cair",
             "pchip",
             "linear",
             "akima",
@@ -119,16 +115,16 @@ def main(args=None):
             "ar",
         ],
     )
-    ap.add_argument("--ckpt", default=None, help="single Refine ckpt (method=refine)")
+    ap.add_argument("--ckpt", default=None, help="single CAIR ckpt (method=cair)")
     ap.add_argument(
         "--ckpt_paths",
         default=None,
-        help="comma-separated Refine ckpts (a rung's 5 members) to ensemble",
+        help="comma-separated CAIR ckpts (a rung's 5 members) to ensemble",
     )
     ap.add_argument(
         "--ckpt_dir",
-        default=os.path.join(ROOT, "method_checkpoints", "refine"),
-        help="Refine ensemble dir (method=refine, when --ckpt omitted)",
+        default=os.path.join(ROOT, "method_checkpoints", "cair"),
+        help="CAIR ensemble dir (method=cair, when --ckpt omitted)",
     )
     ap.add_argument("--dataset", default="aireadi")
     ap.add_argument("--data_dir", default=None)
@@ -171,7 +167,7 @@ def main(args=None):
         "--n_refinements",
         type=int,
         default=2,
-        help="REFINE inference refinement passes (ablation knob; publish default=2).",
+        help="CAIR inference refinement passes (ablation knob; publish default=2).",
     )
     ap.add_argument("--gpu", type=int, default=0)
     ap.add_argument("--out", required=True)
@@ -179,7 +175,7 @@ def main(args=None):
         args = ap.parse_args()
 
     device = "cpu"
-    if args.method == "refine":
+    if args.method == "cair":
         import torch
 
         device = (
@@ -259,7 +255,7 @@ def main(args=None):
     label = (
         args.ckpt
         and os.path.basename(args.ckpt)
-        or (args.method if args.method != "refine" else "ensemble")
+        or (args.method if args.method != "cair" else "ensemble")
     )
     print(f"\n=== short-gap RMSE (mg/dL) | method={args.method} | {label} ===")
     for L in gaps:

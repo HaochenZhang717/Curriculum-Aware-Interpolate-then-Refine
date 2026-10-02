@@ -130,7 +130,7 @@ def main():
         choices=["test", "valtest"],
         help="valtest pools val+test (both unseen by the classifier) for power",
     )
-    ap.add_argument("--methods", default="real,mean,linear,refine,refine_mm")
+    ap.add_argument("--methods", default="real,mean,linear,cair,cair_mm")
     ap.add_argument("--ckpt_suffix", default="_realistic")
     ap.add_argument(
         "--signal_only", action="store_true", help="just report oracle AUROC and stop"
@@ -191,26 +191,26 @@ def main():
 
     # full method comparison
     methods = [m.strip() for m in args.methods.split(",") if m.strip()]
-    refine = refine_mm = None
+    cair = cair_mm = None
     ts_mods = ["hr", "resp", "spo2"]
     ckdir = os.path.join(
-        ROOT, "method_checkpoints", f"refine_{args.dataset}{args.ckpt_suffix}"
+        ROOT, "method_checkpoints", f"cair_{args.dataset}{args.ckpt_suffix}"
     )
-    if "refine" in methods:
+    if "cair" in methods:
         p = sorted(_glob.glob(os.path.join(ckdir, "uni_seed*.pt")))
         if p:
-            from methods.refine import RefineImputer
+            from methods.cair import CAIRImputer
 
-            refine = RefineImputer(ckpt_paths=p, device=args.device)
+            cair = CAIRImputer(ckpt_paths=p, device=args.device)
         else:
-            methods = [m for m in methods if m != "refine"]
-    if "refine_mm" in methods:
+            methods = [m for m in methods if m != "cair"]
+    if "cair_mm" in methods:
         p = sorted(_glob.glob(os.path.join(ckdir, "mm_seed*.pt")))
         if p:
             import torch
-            from methods.refine import RefineImputer
+            from methods.cair import CAIRImputer
 
-            refine_mm = RefineImputer(ckpt_paths=p, device=args.device)
+            cair_mm = CAIRImputer(ckpt_paths=p, device=args.device)
             ts_mods = (
                 torch.load(p[0], map_location="cpu")
                 .get("config", {})
@@ -218,7 +218,7 @@ def main():
                 or ts_mods
             )
         else:
-            methods = [m for m in methods if m != "refine_mm"]
+            methods = [m for m in methods if m != "cair_mm"]
 
     from cgm_datasets.multimodal.modality_spec import build_mod_and_ctx
     from baselines_autoregressive import pchip_impute  # noqa: F401  (ensure path)
@@ -238,7 +238,7 @@ def main():
         om = r["irg_ts_mask"]
         gd = native_gap_durations(om) or [3, 6, 9, 12]
         mod = ctx = None
-        if refine_mm is not None:
+        if cair_mm is not None:
             mod, ctx = build_mod_and_ctx(r, ts_mods, [])
         for rate in rates:
             seed = 9000 + i * 10 + int(rate * 100)
@@ -275,15 +275,15 @@ def main():
                         linear_interp(np.where(obsb, z, np.nan), zmask)
                     ).reshape(-1)
                     filled[tgt] = (pr * std + mean)[tgt]
-                elif m in ("refine", "refine_mm"):
+                elif m in ("cair", "cair_mm"):
                     z = sz[:, 0].astype(np.float32).copy()
                     z[~obsb] = 0.0
-                    imp = refine if m == "refine" else refine_mm
+                    imp = cair if m == "cair" else cair_mm
                     pr = imp.impute(
                         z,
                         zmask,
-                        modality=(mod if m == "refine_mm" else None),
-                        ctx_vec=(ctx if m == "refine_mm" else None),
+                        modality=(mod if m == "cair_mm" else None),
+                        ctx_vec=(ctx if m == "cair_mm" else None),
                     )
                     filled[tgt] = (np.asarray(pr).reshape(-1) * std + mean)[tgt]
                 feat = prognostic_features(filled, lo, hi)
@@ -294,9 +294,7 @@ def main():
             print(f"  eval {i}/{len(te)}", flush=True)
 
     results = []
-    order = [
-        m for m in ("real", "refine_mm", "refine", "linear", "mean") if m in methods
-    ]
+    order = [m for m in ("real", "cair_mm", "cair", "linear", "mean") if m in methods]
     for lab in models:
         print(
             f"\n[result] {lab}: single-vital AUROC by NMAR rate (n_pos={int(np.sum(collected[(lab, order[0], rates[0])][1]))})",

@@ -1,4 +1,4 @@
-"""Render fig5/fig6-style short-gap imputation galleries for the cross-dataset zero-shot setups (Ohio / HUPA-UCM / Shanghai): REFINE (zero-shot) vs classical interpolators (akima, PCHIP, linear, cubic spline, Savitzky-Golay).."""
+"""Render fig5/fig6-style short-gap imputation galleries for the cross-dataset zero-shot setups (Ohio / HUPA-UCM / Shanghai): CAIR (zero-shot) vs classical interpolators (akima, PCHIP, linear, cubic spline, Savitzky-Golay).."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import numpy as np
 
 import plot_examples_toye as T  # shared style, palette, Setup, plot_panel, ...
 
-METHODS = ["akima", "pchip", "linear", "spline", "savgol", "refine"]  # refine last
+METHODS = ["akima", "pchip", "linear", "spline", "savgol", "cair"]  # cair last
 
 
 def dtitle(S):
@@ -34,7 +34,7 @@ def fig_dataset(S, outdir, ncol=4):
                 ax.axis("off")
                 continue
             w = sel[c]
-            tt = f"{g} min · REFINE {w['rmse'].get('refine', float('nan')):.1f}"
+            tt = f"{g} min · CAIR {w['rmse'].get('cair', float('nan')):.1f}"
             T.plot_panel(ax, S, w, methods, title=tt)
             T.panel_label(ax, next(letters))
             if c == 0:
@@ -50,8 +50,8 @@ def fig_dataset(S, outdir, ncol=4):
         fontsize=6,
     )
     fig.suptitle(
-        f"{dtitle(S)} — zero-shot REFINE vs classical interpolators "
-        f"(short-gap, easy→hard by REFINE RMSE)",
+        f"{dtitle(S)}: zero-shot CAIR vs classical interpolators "
+        f"(short-gap, easy→hard by CAIR RMSE)",
         fontsize=7.5,
         y=1.005,
     )
@@ -77,7 +77,7 @@ def write_table(S, methods, tab_rows, outdir):
             )
     md = os.path.join(outdir, f"shortgap_{S.meta['dataset']}_gap_rmse.md")
     with open(md, "w") as f:
-        f.write(f"# {dtitle(S)} — short-gap in-gap RMSE (mg/dL), zero-shot\n\n")
+        f.write(f"# {dtitle(S)}: short-gap in-gap RMSE (mg/dL), zero-shot\n\n")
         f.write(
             "Mean over all captured placements, per gap length. Lowest per "
             "row in **bold**.\n\n"

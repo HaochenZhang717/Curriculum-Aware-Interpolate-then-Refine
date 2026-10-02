@@ -21,7 +21,7 @@ pip install -e .
 
 ## Data
 
-Place prepared AI-READI CGM splits in `data/aireadi_cgm_full/`, activity channels in `data/aireadi_cgm_mm/`, and MIMIC-III splits in `data/prepared/mimic_abp/` or `data/prepared/mimic_hr/`. Place model checkpoints in `method_checkpoints/refine/`.
+Place prepared AI-READI CGM splits in `data/aireadi_cgm_full/`, activity channels in `data/aireadi_cgm_mm/`, and MIMIC-III splits in `data/prepared/mimic_abp/` or `data/prepared/mimic_hr/`. Place model checkpoints in `method_checkpoints/cair/`.
 
 Data and checkpoints are not included. Data sources: [AI-READI](https://aireadi.org/) and [MIMIC-III](https://physionet.org/content/mimiciii/).
 
@@ -31,7 +31,7 @@ Data and checkpoints are not included. Data sources: [AI-READI](https://aireadi.
 python cair.py -p mechanisms
 python cair.py -p shortgap
 python cair.py -p physiological
-python cair.py -p mechanisms -d mimic_abp -n 400 -c method_checkpoints/refine_mimic_abp_realistic
+python cair.py -p mechanisms -d mimic_abp -n 400 -c method_checkpoints/cair_mimic_abp_realistic
 ```
 
 Use `-g -1` for CPU, `-r` for a prepared data directory, and `-o` for the output path. Results are written to `results/`. For M-RNN and GP-VAE, pass the PyPOTS interpreter with `-x`.
@@ -42,12 +42,12 @@ Train one ensemble member:
 python cair.py -p train -s 1 -e 100
 ```
 
-Training options and model configurations are in `methods/refine/train_refine.py` and `configs/refine/`. The original REFINE module names are retained for checkpoint compatibility.
+Training options and model configurations are in `methods/cair/train_cair.py` and `configs/cair/`.
 
 ```python
-from methods.refine import RefineImputer
+from methods.cair import CAIRImputer
 
-model = RefineImputer(device="cuda:0")
+model = CAIRImputer(device="cuda:0")
 prediction = model.impute(series, observed_mask)
 ```
 
@@ -94,7 +94,7 @@ The remaining tables and figures are in [paper/](paper/README.md).
 
 ```text
 cair.py                    Training and evaluation entry point
-methods/refine/            Model, inference, and training
+methods/cair/              Model, inference, and training
 baselines/                 Statistical and neural baselines
 cgm_datasets/              Dataset adapters and preprocessing
 experiments/               Evaluation, cross-validation, and analysis

@@ -16,7 +16,7 @@ ARCH = [
 ]
 
 
-def cell_means(path, method="refine"):
+def cell_means(path, method="cair"):
     """Return (overall_mean, {mech: mean}) of RMSE for `method` in one toye json."""
     if not os.path.exists(path):
         return None
@@ -40,24 +40,24 @@ def cell_means(path, method="refine"):
 
 def main():
     fullp = os.path.join(ABL, "toye_full.json")
-    full = cell_means(fullp, "refine")
+    full = cell_means(fullp, "cair")
     fa = full[0] if full else float("nan")
 
     print(
-        "\n=== REFINE architectural ablation | REALISTIC missingness (Toye MCAR/MAR/NMAR), AI-READI CGM ==="
+        "\n=== CAIR architectural ablation | REALISTIC missingness (Toye MCAR/MAR/NMAR), AI-READI CGM ==="
     )
     print(
         "  RMSE mg/dL, mean over missingness rate 0.05-0.30. 5-seed ensemble per cell."
     )
     print(
-        "  Published-ensemble ref: refine 12.16 vs best baseline linear 14.73 (n=352).\n"
+        "  Published-ensemble ref: cair 12.16 vs best baseline linear 14.73 (n=352).\n"
     )
     print(
         f"  {'cell':<14} {'MCAR':>7} {'MAR':>7} {'NMAR':>7} {'ALL':>7} {'dVsFull':>8}   tests"
     )
     print("  " + "-" * 92)
     for cell, tests in ARCH:
-        r = cell_means(os.path.join(ABL, f"toye_{cell}.json"), "refine")
+        r = cell_means(os.path.join(ABL, f"toye_{cell}.json"), "cair")
         if not r:
             print(f"  {cell:<14} (pending)")
             continue

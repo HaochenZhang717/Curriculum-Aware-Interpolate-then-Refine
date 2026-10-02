@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fill the SAITS/BRITS rows of the REFINE paper's Tables 1-2 on AI-READI."""
+"""Fill the SAITS/BRITS rows of the CAIR paper's Tables 1-2 on AI-READI."""
 
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ def run_pypots(windows, method, pypots_python, epochs, pypots_site=None):
 
 
 def collect_phys(test, t_lo, t_hi, n_masks):
-    """Replicate eval_refine.py masking. Returns (windows, records, n_skipped).
+    """Replicate eval_cair.py masking. Returns (windows, records, n_skipped).
     record = (strategy, target_index_array, true_values_at_target). Participants
     without a full day-2 window are skipped (same rule as eval_short_gaps.py; the
     fixed-length batch requires uniform 288-sample windows)."""

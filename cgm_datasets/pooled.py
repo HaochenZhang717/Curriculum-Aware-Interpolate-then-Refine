@@ -62,7 +62,7 @@ def make_balanced_sampler(
     """
     window_domains = np.asarray(window_domains)
     if window_domains.size == 0:
-        raise ValueError("window_domains is empty — the dataset produced no windows")
+        raise ValueError("window_domains is empty: the dataset produced no windows")
     counts = np.bincount(window_domains)
     counts = np.where(counts == 0, 1, counts)
     if mix == "proportional":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a derived AI-READI prepared split where a wearable channel (hr|resp) becomes the imputation TARGET (irg_ts / irg_ts_mask), for REFINE + baseline short-gap benchmarking."""
+"""Build a derived AI-READI prepared split where a wearable channel (hr|resp) becomes the imputation TARGET (irg_ts / irg_ts_mask), for CAIR + baseline short-gap benchmarking."""
 
 from __future__ import annotations
 import argparse, json, os, pickle

@@ -1,4 +1,4 @@
-"""Adapters that read the nih_generation MIMIC pickles into REFINE's record schema."""
+"""Adapters that read the nih_generation MIMIC pickles into CAIR's record schema."""
 
 from __future__ import annotations
 

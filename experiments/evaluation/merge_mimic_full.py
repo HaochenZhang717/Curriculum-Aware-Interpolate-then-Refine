@@ -1,4 +1,4 @@
-"""Merge the MIMIC full-benchmark result JSONs (baselines + PyPOTS + REFINE variants) into one per-target file with a unified aggregate, and print the 12-method comparison."""
+"""Merge the MIMIC full-benchmark result JSONs (baselines + PyPOTS + CAIR variants) into one per-target file with a unified aggregate, and print the 12-method comparison."""
 
 from __future__ import annotations
 
@@ -35,8 +35,8 @@ ORDER = [
     "fourier",
     "mrnn",
     "gpvae",
-    "refine",
-    "refine_mm",
+    "cair",
+    "cair_mm",
 ]
 
 
@@ -71,7 +71,7 @@ def _mean_rmse(agg, m, mech):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--target", required=True, choices=["abp", "hr"])
-    ap.add_argument("--suffix", default="_realistic", help="REFINE ckpt suffix used")
+    ap.add_argument("--suffix", default="_realistic", help="CAIR ckpt suffix used")
     ap.add_argument("--n", default="200")
     ap.add_argument("--results_dir", default=None)
     args = ap.parse_args()
@@ -84,10 +84,10 @@ def main():
     base = _load_cells(os.path.join(rd, f"toye_mimic_{t}_baselines_n{n}.json"))
     pypots = _load_cells(os.path.join(rd, f"toye_mimic_{t}_pypots_n{n}.json"))
     runi = _load_cells(
-        os.path.join(rd, f"toye_mimic_{t}_refine{suf}_uni_n{n}.json"), "refine"
+        os.path.join(rd, f"toye_mimic_{t}_cair{suf}_uni_n{n}.json"), "cair"
     )
     rmm = _load_cells(
-        os.path.join(rd, f"toye_mimic_{t}_refine{suf}_mm_n{n}.json"), "refine_mm"
+        os.path.join(rd, f"toye_mimic_{t}_cair{suf}_mm_n{n}.json"), "cair_mm"
     )
     cells = base + pypots + runi + rmm
     if not cells:
@@ -112,7 +112,7 @@ def main():
 
     methods = [m for m in ORDER if m in {c["method"] for c in cells}]
     print(
-        f"\n=== MIMIC-{t.upper()} ({units}) full benchmark, RMSE mean/6 rates (REFINE={suf}) ==="
+        f"\n=== MIMIC-{t.upper()} ({units}) full benchmark, RMSE mean/6 rates (CAIR={suf}) ==="
     )
     print(f"  {'method':12s} {'MCAR':>7s} {'MAR':>7s} {'NMAR':>7s}")
     for m in methods:

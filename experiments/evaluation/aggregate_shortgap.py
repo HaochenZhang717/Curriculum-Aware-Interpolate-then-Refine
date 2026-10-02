@@ -15,11 +15,11 @@ ORDER = [
     "akima",
     "ar",
     "pchip",
-    "refine",
-    "refine_mm",
+    "cair",
+    "cair_mm",
 ]
 # marks a method as ours in the table
-OURS = {"refine": " **(ours, unimodal)**", "refine_mm": " **(ours, multimodal)**"}
+OURS = {"cair": " **(ours, unimodal)**", "cair_mm": " **(ours, multimodal)**"}
 
 
 def load_rows(results_dir, target):
@@ -44,7 +44,7 @@ def fmt_table(rows, native_std, title, znorm):
         for g in GAPS:
             v = rows[m].get(g)
             if v is None:
-                cells.append("—")
+                cells.append("N/A")
             elif znorm:
                 cells.append(f"{v / native_std:.3f}")
             else:
@@ -70,7 +70,7 @@ def main():
             f"no result JSONs found for target={args.target} in {args.results_dir}"
         )
     parts = [
-        f"# Short-gap imputation RMSE — {args.target.upper()}",
+        f"# Short-gap imputation RMSE: {args.target.upper()}",
         "",
         f"Native std = {args.native_std:.4f} {unit}. "
         f"Native table is RMSE in {unit}; z-norm table divides by the native std.",

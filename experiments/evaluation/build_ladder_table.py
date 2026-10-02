@@ -48,7 +48,7 @@ def main():
         return f"{x:.2f}" if isinstance(x, (int, float)) and x == x else "-"
 
     lines = []
-    lines.append("# Multimodal REFINE: modality ladder (AI-READI test)\n")
+    lines.append("# Multimodal CAIR: modality ladder (AI-READI test)\n")
     lines.append(
         "5-member ensemble per rung. Lead metric: 5-strategy avg + sleep/ascending. "
         "Published unimodal ensemble anchor: 14.61 (5-strat).\n"

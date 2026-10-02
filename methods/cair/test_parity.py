@@ -4,11 +4,11 @@ from utils.paths import DATA_ROOT, REPO_ROOT, CACHE_ROOT
 import numpy as np
 import torch
 
-from methods.refine.refine import _load_member, Refine
-from methods.refine._cgm_mae_core import warm_start_from
+from methods.cair.cair import _load_member, CAIR
+from methods.cair.backbone import warm_start_from
 
 D = str(DATA_ROOT)
-CKDIR = str(REPO_ROOT / "method_checkpoints/refine")
+CKDIR = str(REPO_ROOT / "method_checkpoints/cair")
 MEMBERS = [
     "member0_hpo3_a07_l4.pt",
     "member1_hpo4_seed1.pt",
@@ -22,7 +22,7 @@ def _build_extended(ckpt_path, n_extra_cond, ctx_dim):
     """Rebuild a member's architecture with K extra cond cols + S static ctx."""
     ck = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     c = ck.get("config", {})
-    return Refine(
+    return CAIR(
         interp_hidden=c.get("hidden", 128),
         interp_layers=c.get("layers", 4),
         inject=c.get("inject", "residual"),

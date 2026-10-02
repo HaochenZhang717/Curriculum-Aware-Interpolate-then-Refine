@@ -45,7 +45,7 @@ def main():
     fa = full["avg"] if full else float("nan")
 
     print(
-        "\n=== REFINE architectural ablation, 5-SEED ENSEMBLE (AI-READI, 5-strategy protocol, N=50) ==="
+        "\n=== CAIR architectural ablation, 5-SEED ENSEMBLE (AI-READI, 5-strategy protocol, N=50) ==="
     )
     print(
         "  Primary metric: avg RMSE mg/dL over meal/sleep/ascending/dipping/combined."
