@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "Please cite the CAIR paper."
+title: "CAIR: Curriculum-Aware Interpolate-then-Refine"
+type: software
+authors:
+  - family-names: Huang
+    given-names: Yu-Chao
+  - family-names: Zhang
+    given-names: Haochen
+  - family-names: Konz
+    given-names: Nicholas
+  - family-names: Chen
+    given-names: Tianlong
+preferred-citation:
+  type: article
+  title: "Curriculum-Aware Interpolate-then-Refine: Learned Physiological Time-Series Imputation under Realistic Missingness"
+  authors:
+    - family-names: Huang
+      given-names: Yu-Chao
+    - family-names: Zhang
+      given-names: Haochen
+    - family-names: Konz
+      given-names: Nicholas
+    - family-names: Chen
+      given-names: Tianlong
+  year: 2026
+  journal: arXiv
+  doi: 10.48550/arXiv.2608.21207
+  url: https://arxiv.org/abs/2608.21207

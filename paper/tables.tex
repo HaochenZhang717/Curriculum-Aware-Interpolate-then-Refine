@@ -1,0 +1,447 @@
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{lccc}
+    \toprule
+    Method & MCAR $\downarrow$ & MAR $\downarrow$ & NMAR $\downarrow$ \\
+    \midrule
+    \textbf{CAIR\ (Ours)} & \textbf{2.66} & \textbf{10.33} & \textbf{23.50} \\
+    \midrule
+    linear interp & \underline{2.91} & \underline{12.34} & \underline{28.94} \\
+    MICE          & 3.26 & 19.83 & 49.35 \\
+    missForest    & 3.33 & 16.54 & 40.90 \\
+    hot-deck      & 5.04 & 16.06 & 43.44 \\
+    $k$NN         & 5.19 & 15.45 & 43.54 \\
+    LOCF          & 6.22 & 19.84 & 34.44 \\
+    Fourier       & 9.91 & 18.47 & 32.72 \\
+    mean          & 28.59 & 28.81 & 54.86 \\
+    GP-VAE        & 26.46 & 40.49 & 70.39 \\
+    M-RNN         & 44.39 & 44.34 & 64.63 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Realistic missingness imputation on AI-READI CGM} (all $352$ test
+  participants; RMSE mg/dL averaged over six missingness rates, lower is
+  better). CAIR\ is best under all three mechanisms and its margin grows with
+  difficulty. The two generic learned imputers fall below every non-constant
+  baseline throughout. \textbf{Bold} = best, \underline{underline} = second best, per column.}
+  \label{tab:mech}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{3.6pt}
+  \begin{tabular}{lccccc}
+    \toprule
+    Method & 15\,min & 30\,min & 45\,min & 60\,min & \textbf{mean} $\downarrow$ \\
+    \midrule
+    \textbf{CAIR\ (Ours)}   & \underline{2.84} & \underline{5.03} & \textbf{6.66} & \textbf{8.23} & \textbf{5.69} \\
+    akima                    & \textbf{2.76} & \textbf{5.01} & \underline{6.87} & 8.61 & \underline{5.81} \\
+    PCHIP                    & 2.84 & 5.14 & 6.92 & \underline{8.58} & 5.87 \\
+    linear                   & 3.20 & 5.64 & 7.45 & 9.09 & 6.34 \\
+    SAITS                    & 4.60 & 7.54 & 9.76 & 11.79 & 8.42 \\
+    BRITS                    & 6.25 & 9.42 & 11.67 & 13.33 & 10.17 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Imputation performance vs. gap length} on AI-READI CGM (all $352$ test
+  participants; RMSE mg/dL). CAIR\ is best on the mean and at
+  $45$-$60$\,min, and second by a small margin at $15$-$30$\,min.
+  \textbf{Bold} = best, \underline{underline} = second, per column.}
+  \label{tab:shortgap}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{3.2pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+    Method & meal & sleep & asc & dip & comb & \textbf{AVG} $\downarrow$ \\
+    \midrule
+    \textbf{CAIR\ (Ours)} & \textbf{15.25} & \textbf{24.94} & 9.01 & 7.49 & \textbf{16.37} & \textbf{14.61} \\
+    \midrule
+    PCHIP           & \underline{16.56} & \underline{29.26} & \textbf{7.86} & 7.36 & 18.65 & \underline{15.94} \\
+    linear          & 16.97 & 29.27 & 8.42 & \underline{7.31} & \underline{18.30} & 16.05 \\
+    akima           & 17.82 & 36.73 & \underline{8.02} & \textbf{7.24} & 19.64 & 17.89 \\
+    Kalman          & 17.97 & 34.70 & 8.88 & 8.09 & 20.29 & 17.99 \\
+    Savitzky-Golay & 17.27 & 29.45 & 13.41 & 11.22 & 19.43 & 18.15 \\
+    SAITS           & 21.27 & 32.02 & 11.22 & 10.22 & 19.70 & 18.89 \\
+    BRITS           & 32.72 & 43.61 & 24.25 & 20.81 & 31.45 & 30.57 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Imputation of physiologically-significant missingness} on AI-READI (all $352$
+  test participants; RMSE mg/dL, lower is better). CAIR\ attains the best
+  average over the full baseline suite, and the gain concentrates in the long
+  \emph{sleep} blocks. The four weakest classical fills are in the supplement.
+  \textbf{Bold} = best, \underline{underline} = second
+  best, per column.}
+  \label{tab:phys}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+    \multicolumn{4}{@{}l}{\emph{(a) Physiological vs.\ random-gap training masks}}\\
+    Training masks & \multicolumn{3}{c@{}}{ABP RMSE $\downarrow$}\\
+    & MCAR & MAR & NMAR \\
+    \midrule
+    linear                  & \underline{4.40} & 9.23 & \underline{11.85} \\
+    CAIR, CGM masks        & 5.47 & \underline{8.74} & 12.10 \\
+    \textbf{CAIR, random-gap} & \textbf{4.30} & \textbf{8.60} & \textbf{11.42} \\
+    \midrule
+    \multicolumn{4}{@{}l}{\emph{(b) Clinical-burden recovery}}\\
+    Method & \multicolumn{3}{c@{}}{MRR $\uparrow$}\\
+    & MCAR & MAR & NMAR \\
+    \midrule
+    linear                & $-0.31$ & $-0.30$ & $+0.14$ \\
+    $k$NN                 & $\mathbf{+0.79}$ & $\mathbf{+0.74}$ & $\mathbf{+0.65}$ \\
+    \textbf{CAIR (ours)} & \underline{$+0.71$} & \underline{$+0.64$} & \underline{$+0.64$} \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Two analyses behind the MIMIC-III results} (ABP).
+  \textbf{(a)} The \emph{identical} architecture, trained on the same ABP data,
+  is less accurate than linear under MCAR and NMAR when trained on masks carried
+  over from glucose physiology, and more accurate under all three under the
+  random-gap curriculum.
+  \textbf{(b)} Linear is \emph{worse than mean-fill} ($\mathrm{MRR}<0$) under
+  MCAR/MAR; CAIR\ and $k$NN recover most of the burden.
+  \textbf{Bold} = best, \underline{underline} = second, per column.
+  A third analysis, in which no imputer separates from any other when
+  predicting mortality from arterial pressure alone, is reported in
+  Sec.~\ref{sec:exp-down}.}
+  \label{tab:analysis}
+\end{table}
+
+\begin{table}[t]
+\centering
+  \setlength{\tabcolsep}{1mm}
+  {\small
+\begin{tabular}{lcccccccc}
+\toprule
+& \multicolumn{4}{c}{Heart rate (bpm) $\downarrow$} & \multicolumn{4}{c}{Resp.\ (br/min) $\downarrow$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Method & 15 & 30 & 45 & 60 & 15 & 30 & 45 & 60 \\
+\midrule
+Akima              & 4.54 & 5.93 & 6.86 & 7.87 & 2.73 & 3.23 & 3.72 & 4.30 \\
+AR (bidir.)        & 4.71 & 5.62 & \underline{6.09} & \underline{6.72} & 2.77 & 3.09 & \underline{3.33} & \underline{3.57} \\
+PCHIP              & 4.45 & 5.62 & 6.27 & 7.05 & 2.63 & 3.07 & 3.43 & 3.76 \\
+Linear             & \underline{4.40} & \underline{5.52} & 6.12 & 6.86 & \underline{2.61} & \underline{3.00} & 3.34 & 3.65 \\
+\midrule
+\multicolumn{9}{l}{CAIR\ (ours)} \\
+\quad univariate   & 4.96 & 6.49 & 6.74 & 7.51 & 2.90 & 3.92 & 4.50 & 5.21 \\
+\quad \textbf{multivariate} & \textbf{3.50} & \textbf{4.19} & \textbf{4.29} & \textbf{4.43} & \textbf{1.88} & \textbf{2.54} & \textbf{2.62} & \textbf{2.72} \\
+\bottomrule
+\end{tabular}}
+  \caption{\textbf{Cross-modal conditioning is what transfers} (AI-READI,
+gap-length protocol, RMSE in native units, lower is better). Column headings are
+gap lengths in minutes; ``Resp.'' is respiration and ``AR (bidir.)'' is
+bidirectional AR. Univariate
+CAIR\ is less accurate than linear at every gap length on both signals; adding
+the co-recorded context makes it best everywhere. On glucose the same context
+adds nothing (Sec.~\ref{sec:exp-other}). \textbf{Bold} = best, \underline{underline} = second, per column.}
+  \label{tab:hr-resp}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{1mm}
+  \begin{tabular}{lcccccc}
+    \toprule
+    & \multicolumn{3}{c}{ABP-mean (mmHg) $\downarrow$} & \multicolumn{3}{c}{HR (bpm) $\downarrow$} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    Method & MCAR & MAR & NMAR & MCAR & MAR & NMAR \\
+    \midrule
+    \textbf{CAIR\ (Ours)} & \textbf{4.30} & \textbf{8.60} & \textbf{11.42} & \underline{2.26} & \textbf{5.28} & \underline{6.48} \\
+    linear interp & \underline{4.40} & \underline{9.23} & \underline{11.85} & \textbf{2.22} & \underline{5.50} & \textbf{6.42} \\
+    GP-VAE & 11.03 & 12.82 & 17.94 & 9.17 & 14.01 & 18.00 \\
+    M-RNN & 13.45 & 13.19 & 18.35 & 15.28 & 14.53 & 18.60 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Cross-domain transfer to MIMIC-III ICU vitals}
+  (reconstruction RMSE, mean over six missingness rates, lower is better).
+  CAIR\ is the most accurate method on arterial pressure under every mechanism;
+  heart rate is a boundary case. The CAIR\ row is the multivariate variant;
+  both variants, the remaining baselines and per-mechanism Wilcoxon tests are
+  in the supplement.
+  \textbf{Bold} = best, \underline{underline} = second, per column.}
+  \label{tab:mimic}
+\end{table}
+
+\begin{table}[htpb]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{lccccr}
+    \toprule
+    Variant & MCAR & MAR & NMAR & \textbf{ALL} $\downarrow$ & $\Delta$ \\
+    \midrule
+    \textbf{CAIR\ (full)}    & \textbf{\aFullMcar} & \underline{\aFullMar} & \textbf{\aFullNmar} & \textbf{\aFullAll} & n/a \\
+    \midrule
+    \; w/o aux.\ loss         & \aAuxMcar & \aAuxMar & \aAuxNmar & \aAuxAll & \aDAux \\
+    \; w/o residual           & \aResMcar & \aResMar & \aResNmar & \aResAll & \aDRes \\
+    \; GRU $\to$ self-attn.   & \aAtnMcar & \textbf{\aAtnMar} & \underline{\aAtnNmar} & \underline{\aAtnAll} & \aDAtn \\
+    \midrule
+    linear interp             & \underline{\aLinMcar} & \aLinMar & \aLinNmar & \aLinAll & \aDLin \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Component ablation} on AI-READI CGM, on the protocol of
+  Table~\ref{tab:mech} (all $\aNpart$ test participants; RMSE mg/dL over six
+  missingness rates). \textbf{ALL} is the mean of the three mechanisms,
+  $\Delta$ the change against the full model. Rows are single training runs
+  under the published recipe, differing only in the ablated component; linear
+  is repeated from Table~\ref{tab:mech} for scale.
+  \textbf{Bold} = best, \underline{underline} = second best, per metric column.}
+  \label{tab:ablation}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{2.4pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+    Pretrain, then fine-tune & meal & sleep & asc & dip & comb & AVG \\
+    \midrule
+    control (AI-READI only)  & \textbf{15.60} & 27.52 & \textbf{5.96} & \textbf{5.14} & \textbf{14.74} & \textbf{13.79} \\
+    $+$ HUPA-UCM (T1D)       & 15.99 & \textbf{26.32} & 6.21 & 5.36 & 15.66 & 13.91 \\
+    $+$ OhioT1DM (T1D)       & 15.77 & \underline{27.14} & \underline{6.08} & 5.21 & 15.25 & \underline{13.89} \\
+    $+$ Shanghai (T2D)       & \underline{15.71} & 27.58 & 6.13 & \underline{5.20} & \underline{15.18} & 13.96 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{External-cohort pretraining does not improve accuracy}
+  (physiological protocol, $352$ participants, single seed; RMSE mg/dL). Every
+  external cell is within $0.2$\,mg/dL of the control and none improves on it.
+  \textbf{Bold} = best, \underline{underline} = second best, per column.}
+  \label{tab:pretrain}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{3.2pt}
+  \begin{tabular}{lcccccc}
+    \toprule
+    Method & meal & sleep & asc & dip & comb & \textbf{AVG} $\downarrow$ \\
+    \midrule
+    \textbf{CAIR\ (Ours)} & \textbf{15.25} & \textbf{24.94} & \textbf{9.01} & \textbf{7.49} & \textbf{16.37} & \textbf{14.61} \\
+    Savitzky-Golay & \underline{17.27} & \underline{29.45} & \underline{13.41} & \underline{11.22} & \underline{19.43} & \underline{18.15} \\
+    \midrule
+    EWMA          & 20.59 & 31.69 & 21.45 & 18.32 & 23.11 & 23.03 \\
+    local mean    & 22.66 & 32.23 & 24.00 & 20.65 & 24.40 & 24.79 \\
+    cubic spline  & 22.64 & 45.22 & 21.90 & 18.62 & 23.85 & 26.44 \\
+    LOCF          & 25.91 & 37.33 & 34.19 & 29.36 & 31.81 & 31.72 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{The four baselines omitted from Table~3 of the main
+  paper} (AI-READI, physiological five-strategy protocol, all $352$ test
+  participants; RMSE mg/dL, lower is better). The lower block is the omitted
+  group; CAIR\ and Savitzky-Golay are repeated from Table~3 as the best method
+  and the weakest one carried there. Every omitted method is at least
+  $4.9$\,mg/dL behind that floor on the average. \textbf{Bold} = best,
+  \underline{underline} = second best, per column.}
+  \label{tab:phys-rest}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lccccc}
+    \toprule
+    Conditioning set & meal & sleep & asc & dip & \textbf{AVG} \\
+    \midrule
+    target only (control) & 14.94 & 25.17 & 6.07 & 4.93 & 13.11 \\
+    $+$ heart rate        & 14.93 & 25.16 & 6.03 & 4.92 & 13.10 \\
+    $+$ steps, calories   & 14.89 & 25.25 & 6.10 & 4.97 & 13.14 \\
+    $+$ sleep state       & 14.89 & 25.27 & 5.98 & 4.92 & 13.09 \\
+    $+$ respiration, stress & 14.79 & 24.96 & 6.00 & 4.89 & \textbf{12.98} \\
+    $+$ environment       & 14.82 & 24.83 & 6.24 & 5.06 & 13.10 \\
+    $+$ clinical          & 14.79 & 24.85 & 6.18 & 5.01 & \underline{13.06} \\
+    $+$ ECG               & 14.86 & 24.87 & 6.26 & 5.09 & 13.14 \\
+    $+$ retinal           & 14.86 & 24.90 & 6.12 & 4.98 & 13.07 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{Conditioning-modality ladder on AI-READI CGM (five-seed ensemble per
+  rung; RMSE mg/dL). Adding modalities does not improve glucose imputation; the AVG spread ($12.98$-$13.14$) is within seed noise. AVG is over all five physiological strategies; the combined column is omitted for space. Absolute values are not comparable to Table~3 of the main paper. \textbf{Bold}/\underline{underline} mark the best/second AVG.}
+  \label{tab:ladder}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{lccc}
+    \toprule
+    Method & MCAR & MAR & NMAR \\
+    \midrule
+    CAIR\ (univariate)   & \textbf{4.26} & \textbf{8.58} & \underline{11.44} \\
+    CAIR\ (multivariate) & \underline{4.30} & \underline{8.60} & \textbf{11.42} \\
+    linear interp   & 4.40 & 9.23 & 11.85 \\
+    missForest      & 4.62 & 9.60 & 12.91 \\
+    MICE            & 4.88 & 9.02 & 12.65 \\
+    $k$NN           & 5.27 & 8.91 & 12.69 \\
+    hot-deck        & 5.82 & 9.11 & 12.81 \\
+    LOCF            & 5.89 & 10.43 & 12.79 \\
+    Fourier         & 5.94 & 11.28 & 13.56 \\
+    mean            & 9.33 & 9.93 & 14.01 \\
+    mode            & 11.42 & 11.82 & 15.11 \\
+    GP-VAE          & 11.03 & 12.82 & 17.94 \\
+    M-RNN           & 13.45 & 13.19 & 18.35 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{Complete MIMIC-III arterial-pressure reconstruction RMSE (mmHg, mean
+  over six missingness rates). \textbf{Bold} = best, \underline{underline} = second best, per column.}
+  \label{tab:mimic-full}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{lccc}
+    \toprule
+    Method & MCAR & MAR & NMAR \\
+    \midrule
+    CAIR\ (univariate)   & \underline{2.26} & \underline{5.36} & 6.72 \\
+    CAIR\ (multivariate) & \underline{2.26} & \textbf{5.28} & \underline{6.48} \\
+    linear interp   & \textbf{2.22} & 5.50 & \textbf{6.42} \\
+    missForest      & 2.37 & 7.40 & 9.25 \\
+    MICE            & 2.49 & 7.55 & 9.63 \\
+    $k$NN           & 2.69 & 7.09 & 9.21 \\
+    hot-deck        & 2.90 & 7.19 & 9.28 \\
+    LOCF            & 3.07 & 7.06 & 7.79 \\
+    Fourier         & 3.31 & 7.17 & 7.86 \\
+    mean            & 8.41 & 9.22 & 11.69 \\
+    mode            & 10.88 & 10.39 & 14.10 \\
+    GP-VAE          & 9.17 & 14.01 & 18.00 \\
+    M-RNN           & 15.28 & 14.53 & 18.60 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{Complete MIMIC-III heart-rate reconstruction RMSE (bpm, mean over six
+  missingness rates). The CAIR\ (multivariate) and linear rows are those of
+  Table~6 of the main paper. CAIR\ is the most accurate method under MAR and
+  linear interpolation under MCAR and NMAR, the two separated by at most
+  $0.22$\,bpm; the per-mechanism significance tests for those differences are in
+  Table~\ref{tab:mimic-wilcoxon}.
+  \textbf{Bold} = best, \underline{underline} = second best, per column.}
+  \label{tab:mimic-hr-full}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{llcc}
+    \toprule
+    Signal & Mechanism & $\Delta$ & $p$ \\
+    \midrule
+    \multirow{3}{*}{ABP-mean (mmHg)}
+      & MCAR & $-0.105$ & $7.9\times10^{-9}$ \\
+      & MAR  & $-0.625$ & $4.1\times10^{-21}$ \\
+      & NMAR & $-0.375$ & $2.9\times10^{-3}$ \\
+    \midrule
+    \multirow{3}{*}{Heart rate (bpm)}
+      & MCAR & $+0.040$ & $7.0\times10^{-40}$ \\
+      & MAR  & $-0.220$ & $0.83$ \\
+      & NMAR & $+0.060$ & $0.37$ \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Paired Wilcoxon signed-rank tests on MIMIC-III}, CAIR\
+  (multivariate) versus linear interpolation, per (window, rate) pair.
+  $\Delta$ is the mean of the per-pair RMSE differences in native units, which
+  need not equal the difference of the aggregate RMSEs in Table~6 of the main
+  paper because RMSE does not aggregate linearly; negative favors CAIR. All three arterial-pressure tests favor CAIR; on heart rate,
+  linear interpolation is significantly better under MCAR and the remaining two
+  differences are not significant ($\alpha=0.05$).}
+  \label{tab:mimic-wilcoxon}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lcc}
+  \toprule
+  Method & RMSE (mmHg) $\downarrow$ & Burden MRR $\uparrow$ \\
+  \midrule
+  \multicolumn{3}{l}{\emph{Low RMSE, burden not preserved}} \\
+  \quad linear interp & 11.85 & $+0.14$ \\
+  \quad LOCF & 12.79 & $+0.07$ \\
+  \quad Fourier & 13.56 & $+0.05$ \\
+  \midrule
+  \multicolumn{3}{l}{\emph{Recovers burden, high RMSE}} \\
+  \quad MICE & 12.65 & $+0.63$ \\
+  \quad $k$NN & 12.69 & $\mathbf{+0.65}$ \\
+  \quad hot-deck & 12.81 & $\mathbf{+0.65}$ \\
+  \quad GP-VAE & 17.94 & $+0.64$ \\
+  \quad M-RNN & 18.35 & $+0.64$ \\
+  \midrule
+  \multicolumn{3}{l}{\emph{Both}} \\
+  \quad CAIR\ (univariate) & \underline{11.44} & $\mathbf{+0.65}$ \\
+  \quad \textbf{CAIR\ (multivar.)} & \textbf{11.42} & $+0.64$ \\
+  \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Only CAIR\ ranks among the best on both axes} (MIMIC-III ABP,
+  NMAR, mean over six rates). Reconstruction RMSE (mmHg, lower better) and
+  clinical-burden recovery (MRR on time in/above/below range, higher better).
+  Interpolants match the RMSE of CAIR\ but fail to preserve the burden; tabular and neural
+  imputers recover the burden at much higher RMSE, with $k$NN and hot-deck
+  matching its recovery at ${\sim}11\%$ higher RMSE. \textbf{Bold} = best, \underline{underline} = second best, per column.}
+  \label{tab:mimic-down}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{lcc}
+    \toprule
+    Fill & MCAR AUROC & NMAR AUROC \\
+    \midrule
+    oracle (recorded trace) & 0.679 & 0.678 \\
+    \midrule
+    mean-fill      & 0.677 & 0.683 \\
+    $k$NN          & 0.680 & 0.685 \\
+    CAIR\ (multivar.) & 0.688 & 0.688 \\
+    linear interp  & 0.692 & 0.688 \\
+    PCHIP          & 0.692 & 0.689 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{Hard outcomes do not reward reconstruction fidelity}
+  (MIMIC-III, in-hospital mortality predicted from arterial pressure alone,
+  $30\%$ missingness, 1D-CNN readout; $n=1200$ under MCAR and $1181$ under
+  NMAR). The oracle is the recorded trace and is the ceiling for this task, yet
+  four fills exceed it under MCAR and all five do under NMAR, because
+  interpolation denoises the vital. No column is ordered as reconstruction
+  accuracy would predict, and no best value is marked.}
+  \label{tab:singlevital}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  {\small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lcccc}
+    \toprule
+    & \multicolumn{2}{c}{RMSE (mg/dL) $\downarrow$} & \multicolumn{2}{c}{TIR recovery $\uparrow$} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    Study group & CAIR & linear & CAIR & linear \\
+    \midrule
+    healthy            & \textbf{18.29} & 21.49 & \textbf{0.165} & 0.097 \\
+    pre-diabetes       & \textbf{15.90} & 21.15 & \textbf{0.467} & 0.382 \\
+    oral medication    & \textbf{33.96} & 40.19 & \textbf{0.601} & 0.556 \\
+    insulin-dependent  & \textbf{27.23} & 35.17 & \textbf{0.608} & 0.489 \\
+    \bottomrule
+  \end{tabular}}
+  \caption{\textbf{The CGM result holds in every diabetes study group}
+  (AI-READI, NMAR, all $352$ test participants). CAIR\ attains lower
+  reconstruction error and higher time-in-range recovery than linear
+  interpolation in all four groups. \textbf{Bold} = better of the two, per group
+  and metric.}
+  \label{tab:cohort}
+\end{table}

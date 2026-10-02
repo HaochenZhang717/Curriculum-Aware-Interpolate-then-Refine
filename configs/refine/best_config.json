@@ -1,0 +1,53 @@
+{
+  "method_name": "REFINE",
+  "variant": "best_ensemble",
+  "summary": "Fully-neural interpolate-and-refine masked autoencoder for CGM imputation.",
+  "model": {
+    "interp_type": "gru",
+    "interp_in": "basic",
+    "inject": "residual",
+    "interp_hidden": 128,
+    "interp_layers": 4,
+    "d_model": 128,
+    "n_layers": 8,
+    "ff_dim": 512,
+    "n_heads": 8,
+    "window": 576
+  },
+  "training": {
+    "aux_loss_weight": 0.7,
+    "aux_huber": false,
+    "learning_rate": 0.0003,
+    "warm_start": false,
+    "ema": true,
+    "loss_weights": [0.15, 0.35, 0.5],
+    "member_epochs": {
+      "member0_hpo3_a07_l4.pt": 120,
+      "member1_hpo4_seed1.pt": 100,
+      "member2_hpo4_seed2.pt": 100,
+      "member3_hpo4_seed3.pt": 100,
+      "member4_hpo4_seed4.pt": 100
+    }
+  },
+  "inference": {
+    "stride": 144,
+    "n_refinements": 2
+  },
+  "ensemble": {
+    "checkpoint_dir": "method_checkpoints/refine",
+    "members": [
+      "member0_hpo3_a07_l4.pt",
+      "member1_hpo4_seed1.pt",
+      "member2_hpo4_seed2.pt",
+      "member3_hpo4_seed3.pt",
+      "member4_hpo4_seed4.pt"
+    ],
+    "seeds": [0, 1, 2, 3, 4]
+  },
+  "evaluation": {
+    "dataset": "aireadi",
+    "protocol": "50 test participants x 5 masks x 5 strategies, day-2 [288:576]",
+    "expected_avg_rmse_mgdl": 13.75,
+    "expected_single_model_rmse_mgdl": 14.05
+  }
+}
